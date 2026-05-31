@@ -327,22 +327,11 @@ tbody td{padding:7px 10px;color:var(--text2);white-space:nowrap}
       </div>
 
       <div class="edit-section">
-        <div class="edit-section-title">⚙️ Strategi Upload</div>
-        <div class="edit-field">
-          <label style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;cursor:pointer;margin-bottom:6px">
-            <input type="radio" name="strategy" value="upsert" checked style="margin-top:3px">
-            <div>
-              <div style="font-size:12px;color:var(--text);font-weight:500">Update & Tambah (Upsert)</div>
-              <div style="font-size:10px;color:var(--text3);margin-top:3px">Update row yang sudah ada (match Serial Id), tambah row baru. Aman.</div>
-            </div>
-          </label>
-          <label style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;cursor:pointer">
-            <input type="radio" name="strategy" value="replace" style="margin-top:3px">
-            <div>
-              <div style="font-size:12px;color:var(--red);font-weight:500">⚠️ Ganti Semua (Replace All)</div>
-              <div style="font-size:10px;color:var(--text3);margin-top:3px">Hapus semua data lama, lalu insert dari CSV. <b style="color:var(--red)">Tidak bisa di-undo!</b></div>
-            </div>
-          </label>
+        <div class="edit-section-title">⚙️ Mode Upload</div>
+        <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.25);border-radius:6px;padding:12px">
+          <div style="font-size:12px;color:var(--red);font-weight:500;margin-bottom:4px">⚠️ Ganti Semua (Replace All)</div>
+          <div style="font-size:11px;color:var(--text2);line-height:1.5">Semua data lama di tabel <b>AHI_MTU</b> akan <b style="color:var(--red)">DIHAPUS</b>, lalu diganti dengan data dari CSV.</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px;font-family:var(--mono)">⛔ Aksi ini tidak bisa di-undo</div>
         </div>
       </div>
 
@@ -1553,7 +1542,10 @@ function downloadCSV(){
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const ts = new Date().toISOString().slice(0,10);
+  // Format: AHI_MTU_2026-05-31_14-30-45.csv
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const ts = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
   a.href = url;
   a.download = `AHI_MTU_${ts}.csv`;
   document.body.appendChild(a);
@@ -1642,13 +1634,9 @@ async function submitUpload(){
 
   if(!sbDb){ alert('Database belum terhubung'); return; }
 
-  const strategy = document.querySelector('input[name="strategy"]:checked').value;
-
-  // Confirm if replace all
-  if(strategy === 'replace'){
-    if(!confirm(`⚠️ PERINGATAN!\n\nSemua data lama di tabel AHI_MTU akan DIHAPUS, lalu diganti dengan ${uploadedRows.length} baris dari CSV.\n\nAksi ini TIDAK BISA DIBATALKAN.\n\nLanjutkan?`)){
-      return;
-    }
+  // Konfirmasi sebelum replace all
+  if(!confirm(`⚠️ PERINGATAN!\n\nSemua data lama di tabel AHI_MTU akan DIHAPUS, lalu diganti dengan ${uploadedRows.length} baris dari CSV.\n\nAksi ini TIDAK BISA DIBATALKAN.\n\nLanjutkan?`)){
+    return;
   }
 
   const submitBtn = document.getElementById('uploadSubmitBtn');
@@ -1665,15 +1653,12 @@ async function submitUpload(){
   });
 
   try{
-    // STEP 1: If replace, delete all existing
-    if(strategy === 'replace'){
-      setUploadProgress(5, 'Menghapus data lama...');
-      // Use a filter that matches all - delete with neq impossible value
-      const delRes = await sbDb.from(SB_TABLE_AHI).delete().neq('Gi','___NEVER_MATCH___');
-      if(delRes.error) throw new Error('Gagal hapus data lama: '+delRes.error.message);
-    }
+    // STEP 1: Delete all existing data
+    setUploadProgress(5, 'Menghapus data lama...');
+    const delRes = await sbDb.from(SB_TABLE_AHI).delete().neq('Gi','___NEVER_MATCH___');
+    if(delRes.error) throw new Error('Gagal hapus data lama: '+delRes.error.message);
 
-    // STEP 2: Insert/Upsert in chunks
+    // STEP 2: Insert new data in chunks
     const CHUNK = 500;
     const totalChunks = Math.ceil(cleanRows.length / CHUNK);
     let inserted = 0;
@@ -1683,16 +1668,9 @@ async function submitUpload(){
       const to = Math.min((i+1)*CHUNK, cleanRows.length);
       const chunk = cleanRows.slice(from, to);
       const pct = 10 + Math.round((i/totalChunks)*85);
-      setUploadProgress(pct, `Upload chunk ${i+1}/${totalChunks} (${inserted+chunk.length}/${cleanRows.length})`);
+      setUploadProgress(pct, `Insert chunk ${i+1}/${totalChunks} (${inserted+chunk.length}/${cleanRows.length})`);
 
-      let result;
-      if(strategy === 'upsert'){
-        // Upsert by Serial Id (assumes Serial Id is unique constraint)
-        result = await sbDb.from(SB_TABLE_AHI).upsert(chunk, {onConflict:'Serial Id'});
-      } else {
-        // Replace: just insert
-        result = await sbDb.from(SB_TABLE_AHI).insert(chunk);
-      }
+      const result = await sbDb.from(SB_TABLE_AHI).insert(chunk);
       if(result.error) throw new Error(`Chunk ${i+1}: ${result.error.message}`);
       inserted += chunk.length;
     }
