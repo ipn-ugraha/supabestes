@@ -1426,9 +1426,9 @@ function openEditMtu(idx){
   document.getElementById('eJust').value = r['Justifikasi Prioritas']||'';
   document.getElementById('eRencana').value = r.Rencana||'';
 
-  // Password reset (hide if session already auth)
+  // Password always required for edit
   document.getElementById('editPwd').value = '';
-  document.getElementById('editPwdSection').style.display = sessionAuth ? 'none' : 'block';
+  document.getElementById('editPwdSection').style.display = 'block';
 
   document.getElementById('editStatus').textContent = '';
   document.getElementById('editStatus').className = 'edit-status';
@@ -1453,16 +1453,14 @@ async function saveEditMtu(){
   const r = raw[editingIdx];
   if(!sbDb){ alert('Database belum terhubung'); return; }
 
-  // Password check
-  if(!sessionAuth){
-    const pwd = document.getElementById('editPwd').value;
-    if(pwd !== ADMIN_PASSWORD){
-      document.getElementById('editStatus').textContent = '✗ Password salah!';
-      document.getElementById('editStatus').className = 'edit-status err';
-      return;
-    }
-    sessionAuth = true;
-    document.getElementById('editPwdSection').style.display = 'none';
+  // Password check - ALWAYS required, never cached
+  const pwd = document.getElementById('editPwd').value;
+  if(pwd !== ADMIN_PASSWORD){
+    document.getElementById('editStatus').textContent = '✗ Password salah!';
+    document.getElementById('editStatus').className = 'edit-status err';
+    document.getElementById('editPwd').value = '';
+    document.getElementById('editPwd').focus();
+    return;
   }
 
   // Need an identifier - try id first, fall back to Serial Id
