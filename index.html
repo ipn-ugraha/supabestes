@@ -13,6 +13,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js" onerror="console.log('config.js tidak ditemukan, pakai modal setup')"></script>
 <style>
 :root{
   --bg:#1c1f23;--bg2:#23272d;--bg3:#2a2f38;--bg4:#323842;
@@ -768,9 +769,22 @@ document.addEventListener('click',e=>{
 });
 
 async function init(){
-  // Get Supabase credentials
-  const sbUrl = localStorage.getItem('sb_url');
-  const sbKey = localStorage.getItem('sb_key');
+  // Priority: config.js → localStorage → modal setup
+  let sbUrl, sbKey;
+  
+  // 1. Coba dari config.js (jika ada window.SUPABASE_URL)
+  if(typeof SUPABASE_URL !== 'undefined' && typeof SUPABASE_ANON_KEY !== 'undefined' 
+     && SUPABASE_URL && SUPABASE_ANON_KEY 
+     && !SUPABASE_URL.includes('xxxxxxxx')){
+    sbUrl = SUPABASE_URL;
+    sbKey = SUPABASE_ANON_KEY;
+  } else {
+    // 2. Fallback ke localStorage
+    sbUrl = localStorage.getItem('sb_url');
+    sbKey = localStorage.getItem('sb_key');
+  }
+  
+  // 3. Kalau tetap kosong, buka modal setup
   if(!sbUrl || !sbKey){
     document.getElementById('loading').style.display='none';
     openSbConfig();
@@ -1935,9 +1949,17 @@ async function doLogin(){
   }
 
   if(!sbDb){
-    // Initialize db if not yet
-    const sbUrl = localStorage.getItem('sb_url');
-    const sbKey = localStorage.getItem('sb_key');
+    // Initialize db if not yet - priority: config.js → localStorage
+    let sbUrl, sbKey;
+    if(typeof SUPABASE_URL !== 'undefined' && typeof SUPABASE_ANON_KEY !== 'undefined' 
+       && SUPABASE_URL && SUPABASE_ANON_KEY 
+       && !SUPABASE_URL.includes('xxxxxxxx')){
+      sbUrl = SUPABASE_URL;
+      sbKey = SUPABASE_ANON_KEY;
+    } else {
+      sbUrl = localStorage.getItem('sb_url');
+      sbKey = localStorage.getItem('sb_key');
+    }
     if(!sbUrl || !sbKey){
       errEl.textContent = '✗ Setup Supabase dulu (klik ⚙ DB)';
       errEl.style.display = 'block';
