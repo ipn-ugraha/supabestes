@@ -226,6 +226,55 @@ tbody td{padding:7px 10px;color:var(--text2);white-space:nowrap}
 </head>
 <body>
 
+<!-- AUDIT LOG MODAL -->
+<div class="edit-overlay" id="auditOverlay">
+  <div class="edit-modal" style="max-width:1000px;max-height:90vh">
+    <div class="edit-head">
+      <div>
+        <div class="edit-head-title">📜 Audit Log</div>
+        <div class="edit-head-sub" id="auditSubtitle">Riwayat perubahan data</div>
+      </div>
+      <button class="edit-close" id="auditCloseBtn">✕</button>
+    </div>
+    <div class="edit-body" style="padding:0">
+
+      <div style="padding:14px 22px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <select id="auditFilterAction" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:6px 10px;border-radius:6px;font-family:var(--font);font-size:12px;outline:none">
+          <option value="">Semua Aksi</option>
+          <option value="edit_mtu">Edit MTU</option>
+          <option value="upload_csv">Upload CSV</option>
+        </select>
+        <input type="text" id="auditFilterUser" placeholder="Filter username..." style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:6px 10px;border-radius:6px;font-family:var(--mono);font-size:12px;outline:none;width:160px">
+        <button id="auditRefreshBtn" style="background:var(--accent);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-family:var(--font);font-size:12px;cursor:pointer">↻ Refresh</button>
+        <span id="auditCount" style="margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--text3)">—</span>
+      </div>
+
+      <div style="overflow-x:auto;max-height:60vh">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead style="background:var(--bg3);position:sticky;top:0;z-index:5">
+            <tr>
+              <th style="padding:9px 12px;text-align:left;font-size:9px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Waktu</th>
+              <th style="padding:9px 12px;text-align:left;font-size:9px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">User</th>
+              <th style="padding:9px 12px;text-align:left;font-size:9px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Aksi</th>
+              <th style="padding:9px 12px;text-align:left;font-size:9px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Target</th>
+              <th style="padding:9px 12px;text-align:left;font-size:9px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Detail</th>
+              <th style="padding:9px 12px;text-align:right;font-size:9px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Rows</th>
+            </tr>
+          </thead>
+          <tbody id="auditBody">
+            <tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text3);font-family:var(--mono)">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+    <div class="edit-foot">
+      <span class="edit-status" id="auditStatus"></span>
+      <button class="btn-cancel" id="auditCloseBtn2">Tutup</button>
+    </div>
+  </div>
+</div>
+
 <!-- LOGIN MODAL -->
 <div id="loginOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)">
   <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:32px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.6);position:relative">
@@ -409,6 +458,7 @@ tbody td{padding:7px 10px;color:var(--text2);white-space:nowrap}
     </div>
     <button id="downloadBtn" title="Download data CSV" style="background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer">↓ CSV</button>
     <button id="uploadBtn" title="Upload CSV (admin only)" style="display:none;background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer">↑ Upload</button>
+    <button id="auditBtn" title="Audit Log (admin only)" style="display:none;background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer">📜 Log</button>
     <button id="sbSettingBtn" title="Pengaturan Supabase" style="background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer">⚙ DB</button>
     <button id="loginBtn" title="Login untuk edit data" style="background:var(--accent);border:1px solid var(--accent);color:#fff;padding:5px 14px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer;font-weight:500">🔐 Login</button>
     <button id="logoutBtn" title="Logout" style="display:none;background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer">🚪 Logout</button>
@@ -1498,6 +1548,23 @@ async function saveEditMtu(){
     'Rencana': document.getElementById('eRencana').value
   };
 
+  // Snapshot old values for audit
+  const oldData = {
+    Gi: r.Gi, Bay: r.Bay, 'Serial Id': r['Serial Id'],
+    'Status Hi': r['Status Hi'],
+    'Nilai Hi': r['Nilai Hi'],
+    'Justifikasi Prioritas': r['Justifikasi Prioritas'],
+    'Rencana': r.Rencana
+  };
+
+  // Track changes (hanya yang berubah)
+  const changes = {};
+  ['Status Hi','Nilai Hi','Justifikasi Prioritas','Rencana'].forEach(f=>{
+    const ov = String(oldData[f]||'').trim();
+    const nv = String(updates[f]||'').trim();
+    if(ov !== nv) changes[f] = {from: oldData[f], to: updates[f]};
+  });
+
   const statusEl = document.getElementById('editStatus');
   const saveBtn = document.getElementById('editSaveBtn');
   statusEl.textContent = '⏳ Menyimpan...';
@@ -1520,6 +1587,13 @@ async function saveEditMtu(){
     r._so = (r['Status Hi']||'').toUpperCase().trim();
     r._se = r._so;
     r._adj = false;
+
+    // Log audit (silent - jangan ganggu UX kalau gagal)
+    logAudit('edit_mtu', {
+      target: (oldData.Gi||'—')+' › '+(oldData.Bay||'—')+' › '+(oldData['Serial Id']||'—'),
+      changes: changes,
+      rows: 1
+    }).catch(e=>console.warn('Audit log gagal:',e.message));
 
     statusEl.textContent = '✓ Berhasil disimpan';
     statusEl.className = 'edit-status ok';
@@ -1698,6 +1772,14 @@ async function submitUpload(){
     setUploadProgress(100, '✓ Selesai!');
     showToast(`✓ Berhasil upload ${inserted.toLocaleString()} baris`,'ok');
 
+    // Log audit
+    const fileName = document.getElementById('uploadFile').files[0]?.name || 'unknown.csv';
+    logAudit('upload_csv', {
+      file: fileName,
+      rows_inserted: inserted,
+      mode: 'replace_all'
+    }, inserted).catch(e=>console.warn('Audit log gagal:',e.message));
+
     document.getElementById('uploadStatus').textContent = `✓ ${inserted.toLocaleString()} baris berhasil`;
     document.getElementById('uploadStatus').className = 'edit-status ok';
 
@@ -1718,6 +1800,118 @@ async function submitUpload(){
 }
 
 document.getElementById('uploadSubmitBtn').addEventListener('click',submitUpload);
+
+// ── AUDIT LOG ────────────────────────────────────────────────────────────────
+async function logAudit(action, details, rows){
+  if(!sbDb || !currentUser) return; // skip kalau guest
+  const username = currentUser._username || currentUser.email.split('@')[0];
+  const targetInfo = details.target || (details.file ? `File: ${details.file}` : '');
+  const row = {
+    action: action,
+    user_id: currentUser.id,
+    username: username,
+    target_info: targetInfo,
+    details: details,
+    rows_affected: rows || (details.rows||1)
+  };
+  const { error } = await sbDb.from('audit_log').insert(row);
+  if(error) throw error;
+}
+
+function openAuditLog(){
+  if(currentRole !== 'admin'){
+    showToast('Hanya admin yang bisa lihat audit log','err');
+    return;
+  }
+  document.getElementById('auditFilterAction').value = '';
+  document.getElementById('auditFilterUser').value = '';
+  document.getElementById('auditOverlay').classList.add('open');
+  loadAuditLog();
+}
+
+function closeAuditLog(){
+  document.getElementById('auditOverlay').classList.remove('open');
+}
+
+async function loadAuditLog(){
+  const body = document.getElementById('auditBody');
+  const countEl = document.getElementById('auditCount');
+  body.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text3);font-family:var(--mono)">Memuat...</td></tr>';
+
+  const filterAction = document.getElementById('auditFilterAction').value;
+  const filterUser = document.getElementById('auditFilterUser').value.trim().toLowerCase();
+
+  let query = sbDb.from('audit_log').select('*').order('created_at',{ascending:false}).limit(500);
+  if(filterAction) query = query.eq('action', filterAction);
+  if(filterUser) query = query.ilike('username', `%${filterUser}%`);
+
+  const { data, error } = await query;
+  if(error){
+    body.innerHTML = `<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--red);font-family:var(--mono)">✗ ${escapeHtml(error.message)}</td></tr>`;
+    countEl.textContent = '—';
+    return;
+  }
+
+  if(!data || data.length===0){
+    body.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text3);font-family:var(--mono)">Belum ada log</td></tr>';
+    countEl.textContent = '0 log';
+    return;
+  }
+
+  countEl.textContent = `${data.length} log` + (data.length===500?' (max 500 terbaru)':'');
+
+  const rows = data.map(log=>{
+    const dt = new Date(log.created_at);
+    const dtStr = dt.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'2-digit'})+
+                  ' '+dt.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+    const actionLabel = log.action==='edit_mtu'?'<span style="color:var(--accent);font-size:10px;font-family:var(--mono)">EDIT MTU</span>':
+                        log.action==='upload_csv'?'<span style="color:var(--amb);font-size:10px;font-family:var(--mono)">UPLOAD CSV</span>':
+                        `<span style="color:var(--text3);font-size:10px;font-family:var(--mono)">${escapeHtml(log.action)}</span>`;
+
+    let detailHtml = '';
+    if(log.details){
+      if(log.details.changes){
+        // Edit: tampilkan field yang berubah
+        detailHtml = Object.keys(log.details.changes).map(k=>{
+          const c = log.details.changes[k];
+          const from = String(c.from||'—').substring(0,30);
+          const to = String(c.to||'—').substring(0,30);
+          return `<div style="margin-bottom:3px"><b style="color:var(--text2)">${escapeHtml(k)}:</b> <span style="color:var(--red)">${escapeHtml(from)}</span> → <span style="color:var(--grn)">${escapeHtml(to)}</span></div>`;
+        }).join('');
+      }else if(log.details.file){
+        detailHtml = `📄 ${escapeHtml(log.details.file)}<br><span style="color:var(--text3);font-size:10px">Mode: ${escapeHtml(log.details.mode||'-')}</span>`;
+      }
+    }
+
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:8px 12px;font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap">${dtStr}</td>
+      <td style="padding:8px 12px;font-family:var(--mono);font-size:11px;color:var(--text)">${escapeHtml(log.username||'—')}</td>
+      <td style="padding:8px 12px">${actionLabel}</td>
+      <td style="padding:8px 12px;font-size:11px;color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${escapeHtml(log.target_info||'')}">${escapeHtml(log.target_info||'—')}</td>
+      <td style="padding:8px 12px;font-size:10px;color:var(--text2);max-width:300px">${detailHtml||'<span style="color:var(--text3)">—</span>'}</td>
+      <td style="padding:8px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--accent)">${log.rows_affected||1}</td>
+    </tr>`;
+  }).join('');
+
+  body.innerHTML = rows;
+}
+
+function escapeHtml(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.getElementById('auditBtn').addEventListener('click',openAuditLog);
+document.getElementById('auditCloseBtn').addEventListener('click',closeAuditLog);
+document.getElementById('auditCloseBtn2').addEventListener('click',closeAuditLog);
+document.getElementById('auditRefreshBtn').addEventListener('click',loadAuditLog);
+document.getElementById('auditFilterAction').addEventListener('change',loadAuditLog);
+document.getElementById('auditFilterUser').addEventListener('input',(()=>{
+  let t; return ()=>{clearTimeout(t); t=setTimeout(loadAuditLog,400);};
+})());
+document.getElementById('auditOverlay').addEventListener('click',(e)=>{
+  if(e.target.id==='auditOverlay') closeAuditLog();
+});
 
 // ── AUTH FUNCTIONS ───────────────────────────────────────────────────────────
 function openLogin(){
@@ -1822,6 +2016,7 @@ function showUserBadge(){
   // Show upload button only for admin
   if(currentRole === 'admin'){
     uploadBtn.style.display = 'inline-block';
+    document.getElementById('auditBtn').style.display = 'inline-block';
   }
 }
 
