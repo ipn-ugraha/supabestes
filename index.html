@@ -3,501 +3,1241 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cek Database Supabase - AHI MTU</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta http-equiv="refresh" content="300">
+<title>Dashboard AHI MTU — UIT JBM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #1c1f23; --bg2: #23272d; --bg3: #2a2f38; --bg4: #323842;
-    --border: rgba(255,255,255,0.09); --border2: rgba(255,255,255,0.16);
-    --text: #f0f2f5; --text2: #a8b0bc; --text3: #6b7585;
-    --accent: #3b82f6; --accent2: #1d4ed8;
-    --red: #ef4444; --grn: #22c55e; --amb: #f59e0b;
-    --font: 'IBM Plex Sans', sans-serif;
-    --mono: 'IBM Plex Mono', monospace;
-  }
-  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; min-height: 100vh; }
-  .topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 52px; position: sticky; top: 0; z-index: 100; }
-  .logo { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: .05em; }
-  .ttitle { font-size: 12px; color: var(--text2); margin-left: 14px; }
-  .btn { padding: 7px 14px; border-radius: 7px; border: none; font-family: var(--font); font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s; }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: var(--accent2); }
-  .btn-secondary { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
-  .btn-secondary:hover { background: var(--bg3); color: var(--text); }
-  .main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
-  .config-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 16px; display: none; }
-  .config-card.show { display: block; }
-  .config-card .field { margin-bottom: 12px; }
-  .config-card label { display: block; font-family: var(--mono); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-  .config-card input { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 7px; padding: 9px 12px; color: var(--text); font-family: var(--mono); font-size: 12px; outline: none; }
-  .config-card input:focus { border-color: var(--accent); }
-  .tabs { display: flex; gap: 6px; margin-bottom: 16px; background: var(--bg2); padding: 6px; border-radius: 10px; border: 1px solid var(--border); width: fit-content; }
-  .tab { padding: 8px 16px; border-radius: 6px; border: none; background: transparent; color: var(--text2); font-family: var(--font); font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s; }
-  .tab:hover { color: var(--text); background: var(--bg3); }
-  .tab.active { background: var(--accent); color: #fff; }
-  .tab-count { background: rgba(255,255,255,0.15); padding: 1px 7px; border-radius: 10px; font-size: 10px; margin-left: 6px; font-family: var(--mono); }
-  .tab.active .tab-count { background: rgba(255,255,255,0.2); }
-  .status-msg { padding: 10px 14px; border-radius: 8px; font-family: var(--mono); font-size: 12px; margin-bottom: 14px; display: none; }
-  .status-msg.show { display: block; }
-  .status-msg.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
-  .status-msg.success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: var(--grn); }
-  .status-msg.loading { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--amb); }
-  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
-  .stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
-  .stat-label { font-family: var(--mono); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
-  .stat-value { font-size: 22px; font-weight: 600; color: var(--text); line-height: 1; }
-  .stat-value.accent { color: var(--accent); }
-  .stat-value.grn { color: var(--grn); }
-  .table-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .table-toolbar { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .table-title { font-family: var(--mono); font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
-  .table-title span { color: var(--accent); }
-  .search-input { background: var(--bg3); border: 1px solid var(--border2); border-radius: 7px; padding: 7px 12px; color: var(--text); font-family: var(--font); font-size: 12px; outline: none; width: 240px; }
-  .search-input:focus { border-color: var(--accent); }
-  .overflow-x { overflow-x: auto; max-height: 600px; overflow-y: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  thead tr { background: var(--bg3); position: sticky; top: 0; z-index: 5; }
-  th { padding: 9px 12px; text-align: left; font-size: 9px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; white-space: nowrap; cursor: pointer; user-select: none; border-bottom: 1px solid var(--border); }
-  th:hover { color: var(--text2); }
-  tbody tr { border-bottom: 1px solid var(--border); }
-  tbody tr:hover { background: rgba(255,255,255,0.02); }
-  td { padding: 8px 12px; color: var(--text2); white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
-  td:first-child { color: var(--text); font-weight: 500; }
-  .pagination { padding: 12px 14px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--text3); flex-wrap: wrap; gap: 10px; align-items: center; }
-  .page-btns { display: flex; gap: 4px; flex-wrap: wrap; }
-  .page-btn { padding: 4px 10px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 5px; color: var(--text2); font-family: var(--mono); font-size: 11px; cursor: pointer; }
-  .page-btn:hover { color: var(--text); border-color: var(--accent); }
-  .page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .welcome { padding: 60px 20px; text-align: center; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; }
-  .welcome h2 { font-size: 18px; margin-bottom: 8px; font-weight: 600; }
-  .welcome p { color: var(--text3); font-family: var(--mono); font-size: 12px; margin-bottom: 16px; }
-  .loading-state { padding: 60px 20px; text-align: center; color: var(--text3); font-family: var(--mono); font-size: 12px; }
-  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(59,130,246,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .tab-section { display: none; }
-  .tab-section.active { display: block; }
+:root{
+  --bg:#1c1f23;--bg2:#23272d;--bg3:#2a2f38;--bg4:#323842;
+  --border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.16);
+  --text:#f0f2f5;--text2:#a8b0bc;--text3:#6b7585;
+  --accent:#3b82f6;--accent2:#1d4ed8;
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.12);--red-bdr:rgba(239,68,68,0.3);
+  --amb:#f59e0b;--amb-bg:rgba(245,158,11,0.12);--amb-bdr:rgba(245,158,11,0.3);
+  --yel:#eab308;
+  --grn:#22c55e;--grn-bg:rgba(34,197,94,0.12);--grn-bdr:rgba(34,197,94,0.3);
+  --tel:#14b8a6;--pur:#a78bfa;
+  --font:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;
+  --r:8px;--rl:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh}
+
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:200}
+.logo{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--accent);letter-spacing:.05em}
+.tdiv{width:1px;height:18px;background:var(--border)}
+.ttitle{font-size:12px;color:var(--text2)}
+.tright{display:flex;align-items:center;gap:10px}
+#last-update{font-family:var(--mono);font-size:11px;color:var(--text3)}
+
+/* TOGGLE BAR */
+.toggle-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.tbar-lbl{font-size:10px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.tgrp{display:flex;align-items:center;gap:8px}
+.tdesc{font-size:12px;color:var(--text2)}
+.tsw{position:relative;width:36px;height:20px;cursor:pointer;flex-shrink:0}
+.tsw input{opacity:0;width:0;height:0}
+.tslider{position:absolute;inset:0;background:var(--bg4);border-radius:20px;transition:.2s;border:1px solid var(--border2)}
+.tslider::before{content:'';position:absolute;width:14px;height:14px;left:2px;top:2px;background:var(--text3);border-radius:50%;transition:.2s}
+.tsw input:checked+.tslider{background:rgba(34,197,94,.2);border-color:var(--grn)}
+.tsw input:checked+.tslider::before{background:var(--grn);transform:translateX(16px)}
+.tbadge{font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:4px;background:var(--grn-bg);color:var(--grn);border:1px solid var(--grn-bdr);display:none}
+.tbadge.on{display:inline}
+#gkbadge{margin-left:auto;display:none;align-items:center;gap:6px;background:var(--red-bg);border:1px solid var(--red-bdr);padding:3px 10px;border-radius:20px;font-size:11px;color:var(--red);font-family:var(--mono)}
+.bdot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.main{padding:16px 24px;max-width:1700px;margin:0 auto}
+
+/* FILTER BAR */
+.fbar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:12px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:16px}
+.fg{display:flex;flex-direction:column;gap:3px}
+.fl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono)}
+.fs,.fi{background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:5px 9px;border-radius:var(--r);font-family:var(--font);font-size:12px;cursor:pointer;outline:none;transition:border-color .15s;appearance:none;-webkit-appearance:none}
+.fs:focus,.fi:focus{border-color:var(--accent)}
+.fi{min-width:190px}
+.fbtn{background:var(--accent);color:#fff;border:none;padding:6px 14px;border-radius:var(--r);font-size:12px;cursor:pointer;font-family:var(--font);font-weight:500;align-self:flex-end}
+.fbtn:hover{background:var(--accent2)}
+.fbtn.rst{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+.fbtn.rst:hover{background:var(--bg3)}
+.fcnt{align-self:flex-end;font-family:var(--mono);font-size:11px;color:var(--text3);padding-bottom:6px;margin-left:auto}
+.fcnt span{color:var(--accent)}
+select option{background:#22272f}
+/* Custom multi-select Tier */
+.ms-wrap{position:relative;min-width:110px}
+.ms-btn{background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:5px 28px 5px 9px;border-radius:var(--r);font-family:var(--font);font-size:12px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:left;position:relative;outline:none}
+.ms-btn::after{content:'▾';position:absolute;right:8px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:10px;pointer-events:none}
+.ms-btn:hover,.ms-btn.open{border-color:rgba(255,255,255,0.22)}
+.ms-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:150px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);z-index:300;box-shadow:0 8px 24px rgba(0,0,0,.5);max-height:260px;overflow-y:auto}
+.ms-dropdown.open{display:block}
+.ms-item{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:12px;color:var(--text2);transition:background .1s;user-select:none}
+.ms-item:hover{background:var(--bg4);color:var(--text)}
+.ms-item input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;cursor:pointer;flex-shrink:0}
+.ms-item.checked{color:var(--text)}
+.ms-divider{height:1px;background:var(--border);margin:4px 0}
+.ms-clear{padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;text-align:center}
+.ms-clear:hover{color:var(--accent)}
+
+/* STATS */
+.srow{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;margin-bottom:16px}
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:12px 14px}
+.sc:hover{border-color:var(--border2)}
+.sl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:5px}
+.sv{font-size:24px;font-weight:600;line-height:1;margin-bottom:2px}
+.ss{font-size:10px;color:var(--text3);font-family:var(--mono)}
+
+/* CHARTS */
+.cgrid1{display:grid;grid-template-columns:230px 1fr;gap:12px;margin-bottom:12px}
+.cgrid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.ccard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px}
+.ctitle{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:10px}
+.dwrap{position:relative;height:145px;width:145px;margin:0 auto}
+.leglist{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+.li{display:flex;align-items:center;gap:7px;font-size:11px}
+.ld{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.ln{color:var(--text2);flex:1}
+.lv{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.cwrap{position:relative;height:205px}
+.cwrap2{position:relative;height:225px}
+
+/* TABLE */
+.tsec{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.thead{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.thead-l{font-size:10px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em}
+.thead-hint{font-size:10px;color:var(--text3);margin-left:8px;font-family:var(--font);text-transform:none;letter-spacing:0}
+.thead-r{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tab{background:transparent;border:1px solid transparent;color:var(--text3);font-size:11px;padding:3px 10px;border-radius:var(--r);cursor:pointer;font-family:var(--font);transition:all .15s}
+.tab:hover{color:var(--text);background:var(--bg3)}
+.tab.on{background:var(--bg3);border-color:var(--border2);color:var(--text)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--bg3);padding:7px 10px;text-align:left;font-size:9px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+thead th:hover{color:var(--text2)}
+thead th.sa::after{content:' ↑';color:var(--accent)}
+thead th.sd::after{content:' ↓';color:var(--accent)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:hover{background:rgba(255,255,255,0.02)}
+tbody td{padding:7px 10px;color:var(--text2);white-space:nowrap}
+
+/* GI / BAY / MTU rows */
+.row-gi td:nth-child(2){color:var(--text);font-weight:600}
+.row-bay td:nth-child(2){padding-left:28px;color:var(--text);font-weight:500}
+.row-mtu td{padding:5px 10px;font-size:11px;color:var(--text3)}
+.row-mtu td:nth-child(2){padding-left:52px}
+.row-bay td,.row-mtu td{background:rgba(255,255,255,0.01)}
+.row-bay:hover td,.row-mtu:hover td{background:rgba(59,130,246,0.04)}
+.row-gi:hover td{background:rgba(255,255,255,0.02)}
+.gi-tgl,.bay-tgl{cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.gi-tgl:hover .giname,.bay-tgl:hover .bname{color:var(--accent);text-decoration:underline}
+.exp-icon{color:var(--text3);font-size:10px;transition:transform .2s;display:inline-block;width:10px;text-align:center;flex-shrink:0}
+.exp-icon.open{transform:rotate(90deg)}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.03em;white-space:nowrap}
+.b-cr{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bdr)}
+.b-po{background:var(--amb-bg);color:var(--amb);border:1px solid var(--amb-bdr)}
+.b-fa{background:rgba(234,179,8,.1);color:var(--yel);border:1px solid rgba(234,179,8,.25)}
+.b-go{background:var(--grn-bg);color:var(--grn);border:1px solid var(--grn-bdr)}
+.b-vg{background:rgba(20,184,166,.1);color:var(--tel);border:1px solid rgba(20,184,166,.25)}
+.b-ex{background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.18)}
+.b-st{background:rgba(245,158,11,.08);color:#fbbf24;border:1px solid rgba(245,158,11,.18)}
+.b-mo{background:rgba(99,102,241,.08);color:#818cf8;border:1px solid rgba(99,102,241,.18)}
+.b-re{background:rgba(34,197,94,.08);color:#4ade80;border:1px solid rgba(34,197,94,.18)}
+.b-adj{background:rgba(34,197,94,.15);color:var(--grn);border:1px dashed var(--grn-bdr);font-size:9px;margin-left:4px}
+.gkd{width:5px;height:5px;border-radius:50%;background:var(--red);display:inline-block;margin-right:3px;vertical-align:middle;flex-shrink:0}
+
+/* HI BAR */
+.hiwrap{display:flex;align-items:center;gap:6px}
+.hibar{height:4px;border-radius:2px;min-width:2px}
+.hival{font-family:var(--mono);font-size:11px;color:var(--text2);min-width:26px}
+
+/* PAGINATION */
+.pag{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border)}
+.pag-info{color:var(--text3);font-family:var(--mono);font-size:11px}
+.pag-btns{display:flex;gap:5px}
+.pb{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:3px 8px;border-radius:var(--r);cursor:pointer;font-size:11px;font-family:var(--font);transition:all .12s}
+.pb:hover{border-color:var(--border2);color:var(--text)}
+.pb.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.pb:disabled{opacity:.3;cursor:not-allowed}
+
+/* LOADING */
+.lov{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:14px}
+.llogo{font-family:var(--mono);font-size:16px;color:var(--accent);letter-spacing:.1em}
+.lbw{width:180px;height:2px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.lb{height:100%;background:var(--accent);border-radius:2px;animation:lba 1.5s ease-in-out infinite}
+@keyframes lba{0%{width:0%;margin-left:0}50%{width:60%;margin-left:40%}100%{width:0%;margin-left:100%}}
+.ltxt{font-size:12px;color:var(--text3)}
+.empty{padding:32px;text-align:center;color:var(--text3);font-size:12px}
+
+@media(max-width:900px){
+  .cgrid1,.cgrid2{grid-template-columns:1fr}
+  .main{padding:10px}
+  .topbar,.toggle-bar{padding:0 12px}
+  .toggle-bar{padding:8px 12px}
+  .ttitle{display:none}
+}
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div style="display:flex;align-items:center">
-    <span class="logo">SUPABASE_DB_VIEWER</span>
-    <span class="ttitle">| AHI MTU - Database Check</span>
-  </div>
-  <div style="display:flex;gap:8px">
-    <button class="btn btn-secondary" onclick="toggleConfig()">⚙ Setting</button>
-    <button class="btn btn-primary" onclick="loadAllData()">↻ Refresh</button>
+<!-- SUPABASE CONFIG MODAL -->
+<div id="sbConfigModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:28px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.6)">
+    <div style="margin-bottom:18px">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.05em;margin-bottom:6px">SUPABASE CONFIG</div>
+      <h2 style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px">Koneksi Database</h2>
+      <p style="font-size:12px;color:var(--text3);font-family:var(--mono)">Isi kredensial Supabase untuk memuat data</p>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Project URL</label>
+      <input type="text" id="sbUrlInput" placeholder="https://xxxxxxxx.supabase.co" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none">
+    </div>
+    <div style="margin-bottom:18px">
+      <label style="display:block;font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Anon Key</label>
+      <input type="password" id="sbKeyInput" placeholder="eyJhbGci..." style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="sbCancelBtn" style="padding:8px 16px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:7px;font-family:var(--font);font-size:12px;cursor:pointer">Batal</button>
+      <button id="sbSaveBtn" style="padding:8px 18px;background:var(--accent);border:none;color:#fff;border-radius:7px;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer">Simpan & Load</button>
+    </div>
   </div>
 </div>
 
-<div class="main">
-
-  <div class="config-card" id="configCard">
-    <div class="field">
-      <label>Project URL</label>
-      <input type="text" id="urlInput" placeholder="https://xxxxxxxx.supabase.co" />
+<div class="lov" id="loading">
+  <div class="llogo">AHI · MTU</div>
+  <div style="width:220px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+      <span class="ltxt" id="ltxt">Memuat data...</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--accent)" id="lpct">0%</span>
     </div>
-    <div class="field">
-      <label>Anon Key</label>
-      <input type="password" id="keyInput" placeholder="eyJhbGci..." />
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="saveConfig()">Simpan & Load</button>
-      <button class="btn btn-secondary" onclick="clearConfig()">Hapus</button>
-    </div>
+    <div class="lbw" style="width:100%"><div class="lb" id="lbar" style="animation:none;width:0%;transition:width .3s"></div></div>
   </div>
-
-  <div class="status-msg" id="statusMsg"></div>
-
-  <div id="contentArea" style="display:none">
-    <div class="tabs">
-      <button class="tab active" data-tab="ahi" onclick="switchTab('ahi')">
-        AHI_MTU <span class="tab-count" id="countAhi">0</span>
-      </button>
-      <button class="tab" data-tab="ref" onclick="switchTab('ref')">
-        gi_referensi <span class="tab-count" id="countRef">0</span>
-      </button>
-    </div>
-
-    <!-- TAB AHI-MTU -->
-    <div class="tab-section active" id="section-ahi">
-      <div class="stats-row">
-        <div class="stat">
-          <div class="stat-label">Total Baris</div>
-          <div class="stat-value accent" id="ahiTotal">—</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Total Kolom</div>
-          <div class="stat-value" id="ahiKolom">—</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Status</div>
-          <div class="stat-value grn" id="ahiStatus" style="font-size:14px">—</div>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <div class="table-toolbar">
-          <span class="table-title">📋 Tabel: <span>AHI_MTU</span></span>
-          <input type="text" class="search-input" id="searchAhi" placeholder="🔍 Cari di AHI_MTU..." oninput="filterTable('ahi')" />
-        </div>
-        <div class="overflow-x" id="containerAhi">
-          <div class="loading-state"><span class="spinner"></span> Memuat data...</div>
-        </div>
-        <div class="pagination" id="paginationAhi"></div>
-      </div>
-    </div>
-
-    <!-- TAB gi_referensi -->
-    <div class="tab-section" id="section-ref">
-      <div class="stats-row">
-        <div class="stat">
-          <div class="stat-label">Total Baris</div>
-          <div class="stat-value accent" id="refTotal">—</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Total Kolom</div>
-          <div class="stat-value" id="refKolom">—</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Status</div>
-          <div class="stat-value grn" id="refStatus" style="font-size:14px">—</div>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <div class="table-toolbar">
-          <span class="table-title">📋 Tabel: <span>gi_referensi</span></span>
-          <input type="text" class="search-input" id="searchRef" placeholder="🔍 Cari di gi_referensi..." oninput="filterTable('ref')" />
-        </div>
-        <div class="overflow-x" id="containerRef">
-          <div class="loading-state"><span class="spinner"></span> Memuat data...</div>
-        </div>
-        <div class="pagination" id="paginationRef"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="welcome" id="welcome">
-    <h2>Selamat Datang</h2>
-    <p>Isi Project URL & Anon Key untuk mulai cek database</p>
-    <button class="btn btn-primary" onclick="toggleConfig()">Mulai Setup</button>
-  </div>
-
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<header class="topbar">
+  <div style="display:flex;align-items:center;gap:14px">
+    <span class="logo">AHI MTU</span>
+    <div class="tdiv"></div>
+    <span class="ttitle">Dashboard Health Index Peralatan — UIT JBM</span>
+  </div>
+  <div class="tright">
+    <span id="last-update">—</span>
+    <div id="gkbadge"><span class="bdot"></span><span id="gkn">0</span> GI Kritikal</div>
+    <button id="sbSettingBtn" title="Pengaturan Supabase" style="background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer">⚙ DB</button>
+  </div>
+</header>
+
+<div class="toggle-bar">
+  <span class="tbar-lbl">Adjustment:</span>
+  <div class="tgrp">
+    <label class="tsw"><input type="checkbox" id="tog-trafo" onchange="onToggle()"><span class="tslider"></span></label>
+    <span class="tdesc">TRAFO usia &lt;20 th, FAIR → GOOD</span>
+    <span class="tbadge" id="badge-trafo">0 item</span>
+  </div>
+  <div class="tgrp">
+    <label class="tsw"><input type="checkbox" id="tog-pmt" onchange="onToggle()"><span class="tslider"></span></label>
+    <span class="tdesc">PMT usia &lt;15 th, FAIR → GOOD</span>
+    <span class="tbadge" id="badge-pmt">0 item</span>
+  </div>
+</div>
+
+<main class="main">
+
+  <div class="fbar">
+    <div class="fg">
+      <span class="fl">UPT</span>
+      <select class="fs" id="f-upt" onchange="onUptChange()" style="min-width:150px"><option value="">Semua UPT</option></select>
+    </div>
+    <div class="fg">
+      <span class="fl">GI</span>
+      <select class="fs" id="f-gi" onchange="applyFilters()" style="min-width:200px"><option value="">Semua GI</option></select>
+    </div>
+    <div class="fg">
+      <span class="fl">Tegangan GI</span>
+      <select class="fs" id="f-teg" onchange="applyFilters()"><option value="">Semua kV</option></select>
+    </div>
+    <div class="fg">
+      <span class="fl">Jenis MTU</span>
+      <select class="fs" id="f-jenis" onchange="applyFilters()"><option value="">Semua</option></select>
+    </div>
+    <div class="fg">
+      <span class="fl">Status Hi</span>
+      <div class="ms-wrap" id="status-wrap">
+        <button type="button" class="ms-btn" id="status-btn" onclick="toggleStatusDrop(event)">Semua Status</button>
+        <div class="ms-dropdown" id="status-drop">
+          <div class="ms-item" data-value="CRITICAL" onclick="msItemClick(this,'status')"><input type="checkbox" value="CRITICAL" id="sc-cr"><label for="sc-cr" style="cursor:pointer;flex:1;color:#ef4444">CRITICAL</label></div>
+          <div class="ms-item" data-value="POOR"     onclick="msItemClick(this,'status')"><input type="checkbox" value="POOR"     id="sc-po"><label for="sc-po" style="cursor:pointer;flex:1;color:#f59e0b">POOR</label></div>
+          <div class="ms-item" data-value="FAIR"     onclick="msItemClick(this,'status')"><input type="checkbox" value="FAIR"     id="sc-fa"><label for="sc-fa" style="cursor:pointer;flex:1;color:#eab308">FAIR</label></div>
+          <div class="ms-item" data-value="GOOD"     onclick="msItemClick(this,'status')"><input type="checkbox" value="GOOD"     id="sc-go"><label for="sc-go" style="cursor:pointer;flex:1;color:#22c55e">GOOD</label></div>
+          <div class="ms-item" data-value="VERY GOOD" onclick="msItemClick(this,'status')"><input type="checkbox" value="VERY GOOD" id="sc-vg"><label for="sc-vg" style="cursor:pointer;flex:1;color:#14b8a6">VERY GOOD</label></div>
+          <div class="ms-divider"></div>
+          <div class="ms-clear" onclick="clearStatus()">Hapus pilihan</div>
+        </div>
+      </div>
+    </div>
+    <div class="fg">
+      <span class="fl">Criticality GI</span>
+      <select class="fs" id="f-crit" onchange="applyFilters()">
+        <option value="">Semua</option>
+        <option>EXTREME</option><option>SANGAT TINGGI</option>
+        <option>TINGGI</option><option>MODERAT</option><option>RENDAH</option>
+      </select>
+    </div>
+    <div class="fg">
+      <span class="fl">Status Usia</span>
+      <select class="fs" id="f-usia" onchange="applyFilters()">
+        <option value="">Semua</option>
+        <option>SANGAT TUA</option><option>TUA</option><option>MUDA</option>
+      </select>
+    </div>
+    <div class="fg">
+      <span class="fl">Tier GI</span>
+      <div class="ms-wrap" id="tier-wrap">
+        <button type="button" class="ms-btn" id="tier-btn" onclick="toggleTierDrop(event)">Semua Tier</button>
+        <div class="ms-dropdown" id="tier-drop">
+          <div class="ms-divider"></div>
+          <div class="ms-clear" onclick="clearTier()">Hapus pilihan</div>
+        </div>
+      </div>
+    </div>
+    <div class="fg">
+      <span class="fl">Jenis Bay</span>
+      <select class="fs" id="f-bay-kat" onchange="applyFilters()" style="min-width:130px">
+        <option value="">Semua Jenis</option>
+        <option value="PHT">PHT</option>
+        <option value="TRAFO">Trafo</option>
+        <option value="IBT">IBT</option>
+        <option value="DIAMETER">Diameter</option>
+        <option value="BUSBAR">Busbar</option>
+        <option value="PEMBANGKIT">Pembangkit</option>
+        <option value="REAKTOR">Reaktor</option>
+        <option value="KAPASITOR">Kapasitor</option>
+        <option value="KOPEL">Kopel</option>
+        <option value="LAINNYA">Lainnya</option>
+      </select>
+    </div>
+    <div class="fg">
+      <span class="fl">GI Kritikal</span>
+      <select class="fs" id="f-gk" onchange="applyFilters()">
+        <option value="">Semua GI</option>
+        <option value="1">Hanya GI Kritikal</option>
+      </select>
+    </div>
+    <div class="fg">
+      <span class="fl">KTT</span>
+      <select class="fs" id="f-ktt" onchange="applyFilters()" style="min-width:120px">
+        <option value="">Semua GI</option>
+        <option value="1">Ada KTT</option>
+        <option value="0">Tidak ada KTT</option>
+      </select>
+    </div>
+    <div class="fg">
+      <span class="fl">Cari</span>
+      <input type="text" class="fi" id="f-q" placeholder="Bay, Serial, GI, Merek...">
+    </div>
+    <div class="fg">
+      <span class="fl">Cari Rencana</span>
+      <input type="text" class="fi" id="f-rencana" placeholder="kata kunci rencana..." style="min-width:180px">
+    </div>
+    <button class="fbtn rst" onclick="resetFilters()">Reset</button>
+    <div class="fcnt" id="fcnt">Menampilkan <span>—</span></div>
+  </div>
+
+  <div class="srow">
+    <div class="sc"><div class="sl">Total Item</div><div class="sv" style="color:var(--text)" id="s-n">—</div><div class="ss">peralatan</div></div>
+    <div class="sc"><div class="sl">Jumlah GI</div><div class="sv" style="color:var(--tel)" id="s-gi">—</div><div class="ss">gardu induk</div></div>
+    <div class="sc"><div class="sl">Jumlah Bay</div><div class="sv" style="color:var(--accent)" id="s-bay">—</div><div class="ss">bay unik</div></div>
+    <div class="sc"><div class="sl">CRITICAL</div><div class="sv" style="color:var(--red)" id="s-cr">—</div><div class="ss" id="s-crp">—</div></div>
+    <div class="sc"><div class="sl">POOR</div><div class="sv" style="color:var(--amb)" id="s-po">—</div><div class="ss" id="s-pop">—</div></div>
+    <div class="sc"><div class="sl">FAIR</div><div class="sv" style="color:var(--yel)" id="s-fa">—</div><div class="ss" id="s-fap">—</div></div>
+    <div class="sc"><div class="sl">GOOD + VG</div><div class="sv" style="color:var(--grn)" id="s-go">—</div><div class="ss" id="s-gop">—</div></div>
+    <div class="sc"><div class="sl">Avg Nilai Hi</div><div class="sv" style="color:var(--accent)" id="s-avg">—</div><div class="ss">rata-rata</div></div>
+    <div class="sc"><div class="sl">Max Nilai Hi</div><div class="sv" style="color:var(--red)" id="s-max">—</div><div class="ss" id="s-maxgi">—</div></div>
+    <div class="sc"><div class="sl">Sangat Tua</div><div class="sv" style="color:var(--pur)" id="s-tua">—</div><div class="ss" id="s-tuap">—</div></div>
+  </div>
+
+  <div class="cgrid1">
+    <div class="ccard">
+      <div class="ctitle">Distribusi Status Hi</div>
+      <div class="dwrap"><canvas id="donutC" role="img" aria-label="Donut distribusi status Hi"></canvas></div>
+      <div class="leglist" id="donut-leg"></div>
+    </div>
+    <div class="ccard">
+      <div class="ctitle">Status Hi per UPT</div>
+      <div class="cwrap"><canvas id="uptC" role="img" aria-label="Stacked bar per UPT"></canvas></div>
+    </div>
+  </div>
+
+  <div class="cgrid2">
+    <div class="ccard">
+      <div class="ctitle">Cluster per Level Tegangan GI</div>
+      <div class="cwrap2"><canvas id="kvC" role="img" aria-label="Bar chart per level tegangan"></canvas></div>
+    </div>
+    <div class="ccard">
+      <div class="ctitle">Status Hi per Jenis MTU</div>
+      <div class="cwrap2"><canvas id="jenisC" role="img" aria-label="Stacked bar per jenis MTU"></canvas></div>
+    </div>
+  </div>
+
+  <div class="cgrid2" style="margin-bottom:16px">
+    <div class="ccard">
+      <div class="ctitle">Distribusi MTU per Status Usia</div>
+      <div class="cwrap2"><canvas id="usiaC" role="img" aria-label="Bar distribusi MTU per status usia"></canvas></div>
+    </div>
+    <div class="ccard">
+      <div class="ctitle">Status Hi per Kelompok Usia Operasi (Tahun Operasi)</div>
+      <div class="cwrap2"><canvas id="usiaStC" role="img" aria-label="Stacked bar status Hi per kelompok usia operasi"></canvas></div>
+    </div>
+  </div>
+
+  <div class="tsec">
+    <div class="thead">
+      <div class="thead-l">Data GI → Bay → MTU <span class="thead-hint">▶ klik GI untuk Bay, klik Bay untuk detail MTU</span></div>
+      <div class="thead-r">
+        <button class="tab on" onclick="setTab('all',this)">Semua</button>
+        <button class="tab" onclick="setTab('critical',this)">Critical Only</button>
+        <button class="tab" onclick="setTab('gi-krit',this)">GI Kritikal</button>
+        <button class="tab" onclick="expandAll(2)">Buka GI</button>
+        <button class="tab" onclick="expandAll(3)">Buka Semua</button>
+        <button class="tab" onclick="collapseAll()">Tutup Semua</button>
+      </div>
+    </div>
+    <div class="tw">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:22px"></th>
+            <th onclick="sb('gi')" data-col="gi">GI</th>
+            <th onclick="sb('kv')" data-col="kv">kV</th>
+            <th onclick="sb('crit')" data-col="crit">Criticality</th>
+            <th onclick="sb('upt')" data-col="upt">UPT</th>
+            <th onclick="sb('worst')" data-col="worst">Worst Status</th>
+            <th onclick="sb('ncr')" data-col="ncr">Justifikasi</th>
+            <th onclick="sb('npo')" data-col="npo">Poor</th>
+            <th onclick="sb('maxhi')" data-col="maxhi">Max Hi</th>
+            <th onclick="sb('nbay')" data-col="nbay">Bay</th>
+            <th onclick="sb('nmtu')" data-col="nmtu">MTU</th>
+            <th>Rencana</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pag">
+      <div class="pag-info" id="pi">—</div>
+      <div class="pag-btns" id="pb"></div>
+    </div>
+  </div>
+
+</main>
+
 <script>
-  var PAGE_SIZE = 25;
-  var db = null;
-  var activeTab = 'ahi';
+const SB_TABLE_AHI='AHI_MTU', SB_TABLE_REF='gi_referensi';
+const PAGE=40, YR=new Date().getFullYear();
+const VALID_PFX=['GI ','GIS ','GITET ','GISTET '];
+const ST_ORD={'CRITICAL':0,'POOR':1,'FAIR':2,'GOOD':3,'VERY GOOD':4};
+const CRIT_ORD={'EXTREME':0,'SANGAT TINGGI':1,'TINGGI':2,'MODERAT':3,'MODERATE':3,'RENDAH':4};
+const ST_COL=['#ef4444','#f59e0b','#eab308','#22c55e','#14b8a6'];
+const ST_LST=['CRITICAL','POOR','FAIR','GOOD','VERY GOOD'];
+// Usia buckets (tahun operasi)
+const USIA_BUCKETS=[
+  {lbl:'MUDA',key:'MUDA'},
+  {lbl:'TUA',key:'TUA'},
+  {lbl:'SANGAT TUA',key:'SANGAT TUA'}
+];
 
-  var state = {
-    ahi: { table: 'AHI_MTU', allData: [], filtered: [], page: 1, sortAsc: {} },
-    ref: { table: 'gi_referensi', allData: [], filtered: [], page: 1, sortAsc: {} }
+let raw=[], giKrit=new Set(), giTierMap=new Map(), giKttMap=new Map(), filtered=[], giGroups=[];
+let page=1, scol='maxhi', sdir='desc', tab='all';
+let expGi=new Set(), expBay=new Set(), charts={};
+
+// ── KATEGORISASI BAY ─────────────────────────────────────────────────────────
+function katBay(b){
+  const u=String(b).toUpperCase().trim();
+  if(!u||u==='-') return 'LAINNYA';
+  if(/DIAMETER/.test(u))                                    return 'DIAMETER';
+  if(/\bIBT\b|INTERBUS|AUTOTRANSFORMATOR|GSUT/.test(u))    return 'IBT';
+  if(/TRAFO|TRF\b|TR#|TR\s|TR-/.test(u))                   return 'TRAFO';
+  if(/PHT|PENYULANG|FDR\b|FEEDER/.test(u))                 return 'PHT';
+  if(/BUSBAR|BUS TIE|^BUS\b/.test(u))                      return 'BUSBAR';
+  if(/KOPEL|KOPPLING|TIE BUS/.test(u))                     return 'KOPEL';
+  if(/KAPASITOR|CAPACITOR|\bCAP\b|SC#/.test(u))            return 'KAPASITOR';
+  if(/REACTOR|REAKTOR|SHUNT\b|INDUKTOR/.test(u))           return 'REAKTOR';
+  if(/PLTU|PLTG|PLTGU|PLTS|PLTD|GT#|ST#|MTR#|SST#/.test(u)) return 'PEMBANGKIT';
+  return 'LAINNYA';
+}
+
+function toggleStatusDrop(e){
+  e.stopPropagation();
+  document.getElementById('status-drop').classList.toggle('open');
+  document.getElementById('status-btn').classList.toggle('open');
+}
+function updStatusBtn(){
+  const checked=[...document.querySelectorAll('#status-drop input:checked')];
+  const btn=document.getElementById('status-btn');
+  if(!checked.length) btn.textContent='Semua Status';
+  else if(checked.length===1) btn.textContent=checked[0].value;
+  else btn.textContent=`${checked.length} Status dipilih`;
+}
+function clearStatus(){
+  document.querySelectorAll('#status-drop input').forEach(cb=>cb.checked=false);
+  updStatusBtn(); applyFilters();
+  document.getElementById('status-drop').classList.remove('open');
+  document.getElementById('status-btn').classList.remove('open');
+}
+function msItemClick(item,id){
+  if(event.target.tagName!=='INPUT'&&event.target.tagName!=='LABEL'){
+    const cb=item.querySelector('input'); cb.checked=!cb.checked;
+  }
+  if(id==='tier') updTierBtn(); else if(id==='status') updStatusBtn();
+  applyFilters();
+}
+
+function toggleTierDrop(e){
+  e.stopPropagation();
+  const drop=document.getElementById('tier-drop');
+  const btn=document.getElementById('tier-btn');
+  drop.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+function updTierBtn(){
+  const checked=[...document.querySelectorAll('#tier-drop input:checked')];
+  const btn=document.getElementById('tier-btn');
+  if(!checked.length) btn.textContent='Semua Tier';
+  else if(checked.length===1) btn.textContent='Tier '+checked[0].value;
+  else btn.textContent=`${checked.length} Tier dipilih`;
+}
+function clearTier(){
+  document.querySelectorAll('#tier-drop input').forEach(cb=>cb.checked=false);
+  updTierBtn(); applyFilters();
+  document.getElementById('tier-drop').classList.remove('open');
+  document.getElementById('tier-btn').classList.remove('open');
+}
+// Close dropdown when clicking outside
+document.addEventListener('click',e=>{
+  if(!document.getElementById('tier-wrap').contains(e.target)){
+    document.getElementById('tier-drop').classList.remove('open');
+    document.getElementById('tier-btn').classList.remove('open');
+  }
+  if(document.getElementById('status-wrap')&&!document.getElementById('status-wrap').contains(e.target)){
+    document.getElementById('status-drop').classList.remove('open');
+    document.getElementById('status-btn').classList.remove('open');
+  }
+});
+
+async function init(){
+  // Get Supabase credentials
+  const sbUrl = localStorage.getItem('sb_url');
+  const sbKey = localStorage.getItem('sb_key');
+  if(!sbUrl || !sbKey){
+    document.getElementById('loading').style.display='none';
+    openSbConfig();
+    return;
+  }
+
+  let db;
+  try{
+    db = supabase.createClient(sbUrl, sbKey);
+  }catch(e){
+    setP(0,'URL Supabase tidak valid');
+    throw new Error('URL Supabase tidak valid: '+e.message);
+  }
+
+  // Load gi_referensi (small table, single fetch)
+  setP(5,'Memuat GI referensi dari Supabase...');
+  try{
+    const refRes = await db.from(SB_TABLE_REF).select('*');
+    if(refRes.error) throw new Error('gi_referensi: '+refRes.error.message);
+    (refRes.data||[]).forEach(x=>{
+      const g=(x.Gi||x.gi||'').trim();
+      if(!g) return;
+      if((x.Kritikal||'').trim()==='Ya') giKrit.add(g);
+      const tier=(x.Tier||'').toString().trim();
+      if(tier) giTierMap.set(g, tier);
+      const ktt=(x.KTT||'').trim();
+      if(ktt) giKttMap.set(g, ktt);
+    });
+  }catch(e){
+    console.warn('gi_referensi error:',e.message);
+  }
+
+  // Load AHI_MTU with chunking (handles >1000 rows)
+  setP(10,'Menghitung jumlah data MTU...');
+  const countRes = await db.from(SB_TABLE_AHI).select('*',{count:'exact',head:true});
+  if(countRes.error) throw new Error('AHI_MTU count: '+countRes.error.message);
+  const totalCount = countRes.count || 0;
+
+  if(totalCount === 0){
+    raw=[];
+    setP(96,'Data kosong...');
+  }else{
+    const CHUNK=1000;
+    const totalChunks=Math.ceil(totalCount/CHUNK);
+    let allRows=[];
+    for(let i=0;i<totalChunks;i++){
+      const from=i*CHUNK, to=Math.min((i+1)*CHUNK-1,totalCount-1);
+      const pct=15+Math.round((i/totalChunks)*60);
+      setP(pct,`Mengunduh MTU... ${allRows.length.toLocaleString()}/${totalCount.toLocaleString()}`);
+      const r=await db.from(SB_TABLE_AHI).select('*').range(from,to);
+      if(r.error) throw new Error('AHI_MTU chunk '+(i+1)+': '+r.error.message);
+      allRows=allRows.concat(r.data||[]);
+    }
+    setP(78,'Memproses data...');
+    raw = allRows.filter(r=>{
+      const gi=(r.Gi||'').trim();
+      return gi && VALID_PFX.some(px=>gi.startsWith(px));
+    });
+  }
+
+  setP(92,'Menghitung nilai...');
+  raw.forEach(r=>{
+    const yr=r['Tahun Operasi']?new Date(r['Tahun Operasi']).getFullYear():null;
+    r._age = yr ? YR-yr : null;
+    r._so  = (r['Status Hi']||'').toUpperCase().trim();
+    r._se  = r._so;
+    r._adj = false;
+    const m=(r.Gi||'').match(/(\d+)KV/i);
+    r._kv  = m?+m[1]:null;
+    r._bayKat = katBay(r.Bay||'');
+  });
+
+  setP(96,'Menyiapkan tampilan...');
+  updToggle();
+  document.getElementById('last-update').textContent=
+    'Data: '+new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+  const gk=document.getElementById('gkbadge');
+  if(gk) gk.style.display='flex';
+  document.querySelectorAll('#gkn').forEach(el=>el.textContent=giKrit.size);
+
+  // Populate Tier custom multi-select dropdown
+  const tiers=[...new Set(giTierMap.values())].map(Number).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
+  const tierDrop=document.getElementById('tier-drop');
+  tiers.forEach(t=>{
+    const item=document.createElement('div');
+    item.className='ms-item';
+    item.dataset.value=String(t);
+    item.innerHTML=`<input type="checkbox" id="tier-cb-${t}" value="${t}"><label for="tier-cb-${t}" style="cursor:pointer;flex:1">Tier ${t}</label>`;
+    item.querySelector('input').addEventListener('change',()=>{updTierBtn();applyFilters();});
+    item.addEventListener('click',e=>{
+      if(e.target.tagName!=='INPUT'&&e.target.tagName!=='LABEL'){
+        const cb=item.querySelector('input'); cb.checked=!cb.checked; updTierBtn(); applyFilters();
+      }
+    });
+    tierDrop.insertBefore(item, tierDrop.querySelector('.ms-divider'));
+  });
+
+  buildFilters();
+
+  setP(99,'Rendering...');
+  // Defer heavy render to next frame so progress hits 99% visibly
+  await new Promise(r=>setTimeout(r,30));
+  applyFilters();
+
+  setP(100,'Selesai');
+  await new Promise(r=>setTimeout(r,200));
+  document.getElementById('loading').style.display='none';
+}
+
+function setP(pct, txt){
+  const bar=document.getElementById('lbar');
+  const label=document.getElementById('ltxt');
+  const num=document.getElementById('lpct');
+  if(bar) bar.style.width=pct+'%';
+  if(label) label.textContent=txt;
+  if(num) num.textContent=pct+'%';
+}
+
+function updToggle(){
+  const nt=raw.filter(r=>r['#']==='TRAFO'&&r._so==='FAIR'&&r._age!=null&&r._age<20).length;
+  const np=raw.filter(r=>r['#']==='PMT'  &&r._so==='FAIR'&&r._age!=null&&r._age<15).length;
+  const bt=document.getElementById('badge-trafo'), bp=document.getElementById('badge-pmt');
+  bt.textContent=nt+' item'; bt.classList.toggle('on',nt>0);
+  bp.textContent=np+' item'; bp.classList.toggle('on',np>0);
+}
+
+function onToggle(){
+  const tt=document.getElementById('tog-trafo').checked;
+  const tp=document.getElementById('tog-pmt').checked;
+  raw.forEach(r=>{
+    let e=r._so;
+    if(tt&&r['#']==='TRAFO'&&r._so==='FAIR'&&r._age!=null&&r._age<20) e='GOOD';
+    if(tp&&r['#']==='PMT'  &&r._so==='FAIR'&&r._age!=null&&r._age<15) e='GOOD';
+    r._se=e; r._adj=(e!==r._so);
+  });
+  applyFilters();
+}
+
+function buildFilters(){
+  const upts=[...new Set(raw.map(r=>r.Upt).filter(v=>v&&v!=='-'))].sort();
+  fillS('f-upt',upts);
+  buildGiOpts('');
+  const kvs=[...new Set(raw.map(r=>r._kv).filter(Boolean))].sort((a,b)=>a-b);
+  fillS('f-teg',kvs.map(v=>({v,l:v+' kV'})));
+  const jenis=[...new Set(raw.map(r=>r['#']).filter(Boolean))].sort();
+  fillS('f-jenis',jenis);
+}
+
+function buildGiOpts(upt){
+  const sel=document.getElementById('f-gi'), cur=sel.value;
+  while(sel.options.length>1) sel.remove(1);
+  let rows=upt?raw.filter(r=>r.Upt===upt):raw;
+  const gis=[...new Set(rows.map(r=>r.Gi).filter(Boolean))].sort();
+  gis.forEach(g=>{
+    const o=document.createElement('option');
+    o.value=g; o.textContent=(giKrit.has(g)?'● ':'')+g;
+    sel.appendChild(o);
+  });
+  sel.value=gis.includes(cur)?cur:'';
+}
+
+function fillS(id,items){
+  const s=document.getElementById(id);
+  items.forEach(x=>{
+    const o=document.createElement('option');
+    if(typeof x==='object'){o.value=x.v;o.textContent=x.l;}else{o.value=x;o.textContent=x;}
+    s.appendChild(o);
+  });
+}
+
+function onUptChange(){buildGiOpts(document.getElementById('f-upt').value);applyFilters();}
+
+function getF(){
+  return{
+    upt:  document.getElementById('f-upt').value,
+    gi:   document.getElementById('f-gi').value,
+    teg:  document.getElementById('f-teg').value,
+    jen:  document.getElementById('f-jenis').value,
+    sta:  [...document.querySelectorAll('#status-drop input:checked')].map(o=>o.value),
+    crit: document.getElementById('f-crit').value,
+    usia: document.getElementById('f-usia').value,
+    baykat: document.getElementById('f-bay-kat').value,
+    tier: [...document.querySelectorAll('#tier-drop input:checked')].map(o=>o.value),
+    gk:      document.getElementById('f-gk').value,
+    ktt:     document.getElementById('f-ktt').value,
+    q:       document.getElementById('f-q').value.trim().toLowerCase(),
+    rencana: document.getElementById('f-rencana').value.trim().toLowerCase(),
   };
+}
 
-  function toggleConfig() {
-    var card = document.getElementById('configCard');
-    card.classList.toggle('show');
-    if (card.classList.contains('show')) {
-      try {
-        document.getElementById('urlInput').value = localStorage.getItem('sb_url') || '';
-        document.getElementById('keyInput').value = localStorage.getItem('sb_key') || '';
-      } catch(e) {}
+function applyFilters(){
+  const f=getF();
+  let d=raw;
+  if(f.upt)  d=d.filter(r=>r.Upt===f.upt);
+  if(f.gi)   d=d.filter(r=>r.Gi===f.gi);
+  if(f.teg)  d=d.filter(r=>r._kv==+f.teg);
+  if(f.jen)  d=d.filter(r=>r['#']===f.jen);
+  if(f.sta.length) d=d.filter(r=>f.sta.includes(r._se));
+  if(f.crit) d=d.filter(r=>(r['Criticality Gi']||'').toUpperCase().includes(f.crit.toUpperCase()));
+  if(f.usia) d=d.filter(r=>(r['Status Usia']||'').toUpperCase()===f.usia.toUpperCase());
+  if(f.baykat) d=d.filter(r=>r._bayKat===f.baykat);
+  if(f.tier.length) d=d.filter(r=>f.tier.includes(giTierMap.get((r.Gi||'').trim())));
+  if(f.gk==='1') d=d.filter(r=>giKrit.has((r.Gi||'').trim()));
+  if(f.ktt==='1') d=d.filter(r=>giKttMap.has((r.Gi||'').trim()));
+  if(f.ktt==='0') d=d.filter(r=>!giKttMap.has((r.Gi||'').trim()));
+  if(f.q) d=d.filter(r=>
+    (r.Bay||'').toLowerCase().includes(f.q)||
+    (r['Serial Id']||'').toLowerCase().includes(f.q)||
+    (r.Gi||'').toLowerCase().includes(f.q)||
+    (r.Merek||'').toLowerCase().includes(f.q)
+  );
+  if(f.rencana) d=d.filter(r=>(r.Rencana||'').toLowerCase().includes(f.rencana));
+  if(tab==='critical') d=d.filter(r=>r._se==='CRITICAL');
+  if(tab==='gi-krit')  d=d.filter(r=>giKrit.has((r.Gi||'').trim()));
+
+  filtered=d; page=1;
+  updStats(); updCharts(); buildGiGroups(); renderTable();
+  document.getElementById('fcnt').innerHTML=`Menampilkan <span>${d.length.toLocaleString('id-ID')}</span> item`;
+}
+
+function resetFilters(){
+  ['f-upt','f-gi','f-teg','f-jenis','f-crit','f-usia','f-gk','f-bay-kat','f-ktt']
+    .forEach(id=>document.getElementById(id).value='');
+  document.querySelectorAll('#tier-drop input,#status-drop input').forEach(cb=>cb.checked=false);
+  updTierBtn(); updStatusBtn();
+  document.getElementById('f-q').value='';
+  document.getElementById('f-rencana').value='';
+  buildGiOpts('');
+  tab='all';
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('on',i===0));
+  applyFilters();
+}
+
+function updStats(){
+  const d=filtered, n=d.length;
+  let cr=0,po=0,fa=0,go=0,tua=0,hiSum=0,hiMax=0,hiMaxR=null,ngiSet=new Set(),nbaySet=new Set();
+  d.forEach(r=>{
+    const st=r._se;
+    if(st==='CRITICAL') cr++;
+    else if(st==='POOR') po++;
+    else if(st==='FAIR') fa++;
+    else if(st==='GOOD'||st==='VERY GOOD') go++;
+    if((r['Status Usia']||'').toUpperCase()==='SANGAT TUA') tua++;
+    const hi=+r['Nilai Hi'];
+    if(!isNaN(hi)&&hi>0){ hiSum+=hi; if(hi>hiMax){hiMax=hi;hiMaxR=r;} }
+    ngiSet.add(r.Gi);
+    nbaySet.add((r.Gi||'')+'\x00'+(r.Bay||''));
+  });
+  const avg=n&&hiMax?hiSum/d.filter(r=>{const h=+r['Nilai Hi'];return !isNaN(h)&&h>0;}).length:0;
+  const pct=(v,n)=>n?(v/n*100).toFixed(1)+'%':'—';
+  const sg=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  sg('s-n',n.toLocaleString('id-ID')); sg('s-gi',ngiSet.size.toLocaleString('id-ID')); sg('s-bay',nbaySet.size.toLocaleString('id-ID'));
+  sg('s-cr',cr.toLocaleString('id-ID')); sg('s-crp',pct(cr,n));
+  sg('s-po',po.toLocaleString('id-ID')); sg('s-pop',pct(po,n));
+  sg('s-fa',fa.toLocaleString('id-ID')); sg('s-fap',pct(fa,n));
+  sg('s-go',go.toLocaleString('id-ID')); sg('s-gop',pct(go,n));
+  sg('s-avg',avg.toFixed(1)); sg('s-max',hiMax);
+  sg('s-maxgi',hiMaxR?(hiMaxR.Gi||'').replace(/G[IS]*ET? \d+KV /,'').replace(/GI \d+KV /,''):'—');
+  sg('s-tua',tua.toLocaleString('id-ID')); sg('s-tuap',pct(tua,n));
+}
+
+function dc(k){if(charts[k]){charts[k].destroy();delete charts[k];}}
+const copt=(stacked,legShow)=>({
+  responsive:true,maintainAspectRatio:false,
+  plugins:{
+    legend:{display:legShow||false,position:'top',labels:{color:'#8a9099',font:{size:10},boxWidth:10,padding:8}},
+    tooltip:{mode:'index',intersect:false}
+  },
+  scales:{
+    x:{stacked,ticks:{color:'#8a9099',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'}},
+    y:{stacked,ticks:{color:'#8a9099',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'}}
+  }
+});
+
+function updCharts(){
+  // ── Single-pass aggregation ──────────────────────────────────────────────
+  // Counters: uptSt[upt][status], kvSt[kv][status], jenisSt[jenis][status],
+  //           usiaSt[bucketIdx][status], stCount[status]
+  const uptSt={}, kvSt={}, jenisSt={}, usiaSt={}, ageSt={}, stCount={};
+  ST_LST.forEach(s=>stCount[s]=0);
+
+  // Age buckets for chart 2 (Tahun Operasi)
+  const AGE_BUCKETS=[
+    {lbl:'≤5 th',min:0,max:5},{lbl:'6–10 th',min:6,max:10},
+    {lbl:'11–15 th',min:11,max:15},{lbl:'16–20 th',min:16,max:20},
+    {lbl:'21–25 th',min:21,max:25},{lbl:'26–30 th',min:26,max:30},
+    {lbl:'31–40 th',min:31,max:40},{lbl:'>40 th',min:41,max:999}
+  ];
+
+  filtered.forEach(r=>{
+    const st=r._se, upt=r.Upt||'', kv=r._kv||'', jen=r['#']||'';
+    if(stCount[st]!==undefined) stCount[st]++;
+    // UPT
+    if(upt&&upt!=='-'){
+      if(!uptSt[upt]) uptSt[upt]={};
+      uptSt[upt][st]=(uptSt[upt][st]||0)+1;
     }
-  }
-
-  function saveConfig() {
-    var url = document.getElementById('urlInput').value.trim();
-    var key = document.getElementById('keyInput').value.trim();
-    if (!url || !key) { alert('URL dan Key wajib diisi!'); return; }
-    try {
-      localStorage.setItem('sb_url', url);
-      localStorage.setItem('sb_key', key);
-    } catch(e) {}
-    document.getElementById('configCard').classList.remove('show');
-    loadAllData();
-  }
-
-  function clearConfig() {
-    if (!confirm('Hapus URL dan Key dari browser?')) return;
-    try {
-      localStorage.removeItem('sb_url');
-      localStorage.removeItem('sb_key');
-    } catch(e) {}
-    document.getElementById('urlInput').value = '';
-    document.getElementById('keyInput').value = '';
-    document.getElementById('welcome').style.display = 'block';
-    document.getElementById('contentArea').style.display = 'none';
-    setStatus('success', 'Kredensial berhasil dihapus');
-  }
-
-  function setStatus(type, msg) {
-    var el = document.getElementById('statusMsg');
-    el.className = 'status-msg show ' + type;
-    el.textContent = msg;
-  }
-
-  function switchTab(tab) {
-    activeTab = tab;
-    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
-    document.querySelectorAll('.tab-section').forEach(function(s) { s.classList.remove('active'); });
-    document.querySelector('.tab[data-tab="' + tab + '"]').classList.add('active');
-    document.getElementById('section-' + tab).classList.add('active');
-  }
-
-  function loadAllData() {
-    var url, key;
-    try {
-      url = localStorage.getItem('sb_url');
-      key = localStorage.getItem('sb_key');
-    } catch(e) {}
-
-    if (!url || !key) {
-      document.getElementById('welcome').style.display = 'block';
-      document.getElementById('contentArea').style.display = 'none';
-      setStatus('error', 'Isi Project URL dan Anon Key dulu (klik tombol Setting)');
-      return;
+    // kV
+    if(kv){
+      if(!kvSt[kv]) kvSt[kv]={};
+      kvSt[kv][st]=(kvSt[kv][st]||0)+1;
     }
-
-    try {
-      db = supabase.createClient(url, key);
-    } catch(e) {
-      setStatus('error', 'URL tidak valid: ' + e.message);
-      return;
+    // Jenis
+    if(jen){
+      if(!jenisSt[jen]) jenisSt[jen]={};
+      jenisSt[jen][st]=(jenisSt[jen][st]||0)+1;
     }
-
-    document.getElementById('welcome').style.display = 'none';
-    document.getElementById('contentArea').style.display = 'block';
-    setStatus('loading', '⏳ Memuat data dari kedua tabel...');
-
-    // Load both tables in parallel
-    Promise.all([
-      loadTable('ahi'),
-      loadTable('ref')
-    ]).then(function(results) {
-      var ahiOk = results[0];
-      var refOk = results[1];
-      if (ahiOk && refOk) {
-        setStatus('success', '✓ Kedua tabel berhasil dimuat');
-      } else if (ahiOk || refOk) {
-        setStatus('error', '⚠ Sebagian tabel gagal dimuat - cek detail di masing-masing tab');
-      } else {
-        setStatus('error', '✗ Kedua tabel gagal dimuat');
+    // Chart 1: Status Usia (MUDA/TUA/SANGAT TUA)
+    const usiaKey=(r['Status Usia']||'').toUpperCase().trim();
+    const bi=USIA_BUCKETS.findIndex(b=>b.key===usiaKey);
+    if(bi>=0){
+      if(!usiaSt[bi]) usiaSt[bi]={};
+      usiaSt[bi][st]=(usiaSt[bi][st]||0)+1;
+    }
+    // Chart 2: Tahun Operasi → bucket usia aktual
+    if(r._age!=null){
+      const ai=AGE_BUCKETS.findIndex(b=>r._age>=b.min&&r._age<=b.max);
+      if(ai>=0){
+        if(!ageSt[ai]) ageSt[ai]={};
+        ageSt[ai][st]=(ageSt[ai][st]||0)+1;
       }
-    });
-  }
+    }
+  });
 
-  function loadTable(tabKey) {
-    var s = state[tabKey];
-    var prefix = tabKey === 'ahi' ? 'ahi' : 'ref';
-    var containerId = 'container' + prefix.charAt(0).toUpperCase() + prefix.slice(1);
+  const upts=Object.keys(uptSt).sort();
+  const kvs=Object.keys(kvSt).map(Number).sort((a,b)=>a-b);
+  const jenis=Object.keys(jenisSt).sort();
 
-    document.getElementById(prefix + 'Status').textContent = 'Loading...';
-    document.getElementById(prefix + 'Status').style.color = '';
-    document.getElementById(prefix + 'Status').style.fontSize = '14px';
-    document.getElementById(containerId).innerHTML =
-      '<div class="loading-state"><span class="spinner"></span> Memuat ' + s.table + '...</div>';
+  // ── Donut ────────────────────────────────────────────────────────────────
+  dc('d');
+  const dc_counts=ST_LST.map(s=>stCount[s]||0);
+  charts.d=new Chart(document.getElementById('donutC').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:ST_LST,datasets:[{data:dc_counts,backgroundColor:ST_COL,borderWidth:2,borderColor:'#13161b'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.raw.toLocaleString('id-ID')}`}}}}
+  });
+  document.getElementById('donut-leg').innerHTML=ST_LST.map((s,i)=>
+    `<div class="li"><span class="ld" style="background:${ST_COL[i]}"></span><span class="ln">${s}</span><span class="lv">${dc_counts[i].toLocaleString('id-ID')}</span></div>`
+  ).join('');
 
-    // STEP 1: Get exact count first
-    return db.from(s.table).select('*', { count: 'exact', head: true }).then(function(countResult) {
-      if (countResult.error) {
-        document.getElementById(prefix + 'Status').textContent = '✗ Error';
-        document.getElementById(prefix + 'Status').style.color = 'var(--red)';
-        document.getElementById(containerId).innerHTML =
-          '<div class="loading-state" style="color:var(--red)">✗ ' + countResult.error.message + '</div>';
-        return false;
+  // ── UPT horizontal stacked ───────────────────────────────────────────────
+  dc('u');
+  charts.u=new Chart(document.getElementById('uptC').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:upts.map(u=>u.replace('UPT ','')),
+      datasets:ST_LST.map((s,i)=>({
+        label:s,
+        data:upts.map(u=>(uptSt[u]&&uptSt[u][s])||0),
+        backgroundColor:ST_COL[i],borderRadius:3,borderSkipped:false
+      }))
+    },
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+      scales:{
+        x:{stacked:true,ticks:{color:'#8a9099',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{stacked:true,ticks:{color:'#8a9099',font:{size:12}},grid:{color:'rgba(255,255,255,0.04)'}}
       }
+    }
+  });
 
-      var totalCount = countResult.count || 0;
+  // ── kV clusters ──────────────────────────────────────────────────────────
+  dc('kv');
+  charts.kv=new Chart(document.getElementById('kvC').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:kvs.map(k=>k+' kV'),
+      datasets:ST_LST.map((s,i)=>({
+        label:s,
+        data:kvs.map(kv=>(kvSt[kv]&&kvSt[kv][s])||0),
+        backgroundColor:ST_COL[i],borderRadius:3,borderSkipped:false
+      }))
+    },
+    options:copt(true,false)
+  });
 
-      if (totalCount === 0) {
-        s.allData = [];
-        s.filtered = [];
-        document.getElementById(prefix + 'Total').textContent = '0';
-        document.getElementById(prefix + 'Kolom').textContent = '0';
-        document.getElementById(prefix + 'Status').textContent = '✓ Kosong';
-        document.getElementById(prefix + 'Status').style.color = 'var(--amb)';
-        document.getElementById('count' + prefix.charAt(0).toUpperCase() + prefix.slice(1)).textContent = '0';
-        document.getElementById(containerId).innerHTML = '<div class="loading-state">Tabel kosong</div>';
-        return true;
-      }
+  // ── Jenis MTU ─────────────────────────────────────────────────────────────
+  dc('j');
+  charts.j=new Chart(document.getElementById('jenisC').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:jenis,
+      datasets:ST_LST.map((s,i)=>({
+        label:s,
+        data:jenis.map(j=>(jenisSt[j]&&jenisSt[j][s])||0),
+        backgroundColor:ST_COL[i],borderRadius:3,borderSkipped:false
+      }))
+    },
+    options:copt(true,true)
+  });
 
-      // STEP 2: Fetch all in chunks of 1000
-      return fetchAllRows(s.table, totalCount, prefix, containerId).then(function(allRows) {
-        s.allData = allRows;
-        s.filtered = allRows.slice();
-        s.page = 1;
-
-        var loaded = allRows.length;
-        var statusTxt = loaded === totalCount ? '✓ Lengkap' : '⚠ ' + loaded + '/' + totalCount;
-        var statusColor = loaded === totalCount ? 'var(--grn)' : 'var(--amb)';
-
-        document.getElementById(prefix + 'Total').textContent = totalCount.toLocaleString();
-        document.getElementById(prefix + 'Kolom').textContent = allRows.length > 0 ? Object.keys(allRows[0]).length : 0;
-        document.getElementById(prefix + 'Status').textContent = statusTxt;
-        document.getElementById(prefix + 'Status').style.color = statusColor;
-        document.getElementById('count' + prefix.charAt(0).toUpperCase() + prefix.slice(1)).textContent = loaded.toLocaleString();
-
-        renderTable(tabKey);
-        return true;
-      });
-    }, function(err) {
-      document.getElementById(prefix + 'Status').textContent = '✗ Failed';
-      document.getElementById(prefix + 'Status').style.color = 'var(--red)';
-      document.getElementById(containerId).innerHTML =
-        '<div class="loading-state" style="color:var(--red)">✗ ' + err.message + '</div>';
-      return false;
-    });
-  }
-
-  function fetchAllRows(table, totalCount, prefix, containerId) {
-    var CHUNK = 1000;
-    var totalChunks = Math.ceil(totalCount / CHUNK);
-    var allRows = [];
-
-    function fetchChunk(idx) {
-      var from = idx * CHUNK;
-      var to = Math.min((idx + 1) * CHUNK - 1, totalCount - 1);
-
-      document.getElementById(containerId).innerHTML =
-        '<div class="loading-state"><span class="spinner"></span> Memuat ' + table + '... ' +
-        (idx + 1) + '/' + totalChunks + ' chunk (' + Math.min((idx + 1) * CHUNK, totalCount).toLocaleString() +
-        '/' + totalCount.toLocaleString() + ' baris)</div>';
-
-      return db.from(table).select('*').range(from, to).then(function(res) {
-        if (res.error) throw res.error;
-        allRows = allRows.concat(res.data || []);
-        if (idx + 1 < totalChunks) {
-          return fetchChunk(idx + 1);
+  // ── Usia distribusi ───────────────────────────────────────────────────────
+  dc('us');
+  // ── Distribusi MTU per Status Usia × Status Hi (stacked) ────────────────
+  dc('us');
+  const GRAD=['#22c55e','#f59e0b','#ef4444'];
+  charts.us=new Chart(document.getElementById('usiaC').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:USIA_BUCKETS.map(b=>b.lbl),
+      datasets:ST_LST.map((s,i)=>({
+        label:s,
+        data:USIA_BUCKETS.map((_,bi)=>(usiaSt[bi]&&usiaSt[bi][s])||0),
+        backgroundColor:ST_COL[i],borderRadius:3,borderSkipped:false
+      }))
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,position:'top',labels:{color:'#8a9099',font:{size:10},boxWidth:10,padding:8}},
+        tooltip:{
+          mode:'index',intersect:false,
+          callbacks:{
+            afterTitle:c=>{
+              const bi=c[0].dataIndex;
+              const total=Object.values(usiaSt[bi]||{}).reduce((a,b)=>a+b,0);
+              return `Total: ${total.toLocaleString('id-ID')} MTU`;
+            }
+          }
         }
-        return allRows;
-      });
-    }
-
-    return fetchChunk(0);
-  }
-
-  function renderTable(tabKey) {
-    var s = state[tabKey];
-    var prefix = tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
-    var container = document.getElementById('container' + prefix);
-
-    if (s.allData.length === 0) {
-      container.innerHTML = '<div class="loading-state">Tabel kosong</div>';
-      return;
-    }
-
-    var headers = Object.keys(s.allData[0]);
-    var thHTML = '';
-    for (var i = 0; i < headers.length; i++) {
-      thHTML += '<th onclick="sortBy(\'' + tabKey + '\', \'' + headers[i].replace(/'/g, "\\'") + '\')">' + headers[i] + '</th>';
-    }
-    container.innerHTML = '<table><thead><tr>' + thHTML + '</tr></thead><tbody id="tbody-' + tabKey + '"></tbody></table>';
-    renderPage(tabKey);
-  }
-
-  function renderPage(tabKey) {
-    var s = state[tabKey];
-    var start = (s.page - 1) * PAGE_SIZE;
-    var pageData = s.filtered.slice(start, start + PAGE_SIZE);
-    var headers = Object.keys(s.allData[0]);
-    var body = document.getElementById('tbody-' + tabKey);
-    if (!body) return;
-
-    if (s.filtered.length === 0) {
-      body.innerHTML = '<tr><td colspan="' + headers.length + '" style="text-align:center;padding:40px;color:var(--text3)">Data tidak ditemukan</td></tr>';
-    } else {
-      var rows = '';
-      for (var i = 0; i < pageData.length; i++) {
-        var row = pageData[i];
-        var cells = '';
-        for (var j = 0; j < headers.length; j++) {
-          var val = row[headers[j]];
-          var display = (val === null || val === undefined || val === '') ? '<span style="color:var(--text3)">—</span>' : escapeHtml(String(val));
-          var titleVal = (val === null || val === undefined) ? '' : String(val).replace(/"/g, '&quot;');
-          cells += '<td title="' + titleVal + '">' + display + '</td>';
-        }
-        rows += '<tr>' + cells + '</tr>';
-      }
-      body.innerHTML = rows;
-    }
-    renderPagination(tabKey);
-  }
-
-  function renderPagination(tabKey) {
-    var s = state[tabKey];
-    var prefix = tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
-    var total = s.filtered.length;
-    var totalPages = Math.ceil(total / PAGE_SIZE);
-    var start = (s.page - 1) * PAGE_SIZE + 1;
-    var end = Math.min(s.page * PAGE_SIZE, total);
-    var el = document.getElementById('pagination' + prefix);
-    if (total === 0) { el.innerHTML = ''; return; }
-
-    var btns = '';
-    for (var i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || Math.abs(i - s.page) <= 1) {
-        btns += '<button class="page-btn ' + (i === s.page ? 'active' : '') + '" onclick="goPage(\'' + tabKey + '\', ' + i + ')">' + i + '</button>';
-      } else if (Math.abs(i - s.page) === 2) {
-        btns += '<span style="color:var(--text3);padding:0 4px">...</span>';
+      },
+      scales:{
+        x:{stacked:true,ticks:{color:'#8a9099',font:{size:12}},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{stacked:true,ticks:{color:'#8a9099',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'}}
       }
     }
-    el.innerHTML = '<span>Menampilkan ' + start + '-' + end + ' dari ' + total.toLocaleString() + ' baris</span><div class="page-btns">' + btns + '</div>';
-  }
+  });
 
-  function goPage(tabKey, p) {
-    state[tabKey].page = p;
-    renderPage(tabKey);
-  }
+  // ── Status Hi per Kelompok Usia (Tahun Operasi) ───────────────────────────
+  dc('ust');
+  charts.ust=new Chart(document.getElementById('usiaStC').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:AGE_BUCKETS.map(b=>b.lbl),
+      datasets:ST_LST.map((s,i)=>({
+        label:s,
+        data:AGE_BUCKETS.map((_,ai)=>(ageSt[ai]&&ageSt[ai][s])||0),
+        backgroundColor:ST_COL[i],borderRadius:3,borderSkipped:false
+      }))
+    },
+    options:copt(true,true)
+  });
+}
 
-  function filterTable(tabKey) {
-    var s = state[tabKey];
-    var inputId = tabKey === 'ahi' ? 'searchAhi' : 'searchRef';
-    var q = document.getElementById(inputId).value.toLowerCase();
-    s.filtered = s.allData.filter(function(row) {
-      var vals = Object.values(row);
-      for (var i = 0; i < vals.length; i++) {
-        if (String(vals[i] || '').toLowerCase().indexOf(q) !== -1) return true;
-      }
-      return false;
-    });
-    s.page = 1;
-    renderPage(tabKey);
-  }
-
-  function sortBy(tabKey, col) {
-    var s = state[tabKey];
-    s.sortAsc[col] = !s.sortAsc[col];
-    var asc = s.sortAsc[col];
-    s.filtered.sort(function(a, b) {
-      var va = a[col]; var vb = b[col];
-      if (va === null || va === undefined) va = '';
-      if (vb === null || vb === undefined) vb = '';
-      return asc
-        ? String(va).localeCompare(String(vb), undefined, { numeric: true })
-        : String(vb).localeCompare(String(va), undefined, { numeric: true });
-    });
-    s.page = 1;
-    renderPage(tabKey);
-  }
-
-  function escapeHtml(s) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
-  window.onload = function() {
-    var hasConfig = false;
-    try {
-      hasConfig = !!(localStorage.getItem('sb_url') && localStorage.getItem('sb_key'));
-    } catch(e) {}
-    if (hasConfig) {
-      loadAllData();
-    }
+// ── 3-LEVEL GROUPING: GI → Bay → MTU ──────────────────────────────────────
+function aggStats(rows){
+  const ss=rows.map(r=>r._se);
+  const his=rows.map(r=>+r['Nilai Hi']).filter(v=>!isNaN(v)&&v>0);
+  const wi=ss.reduce((b,s,i)=>(ST_ORD[s]??9)<(ST_ORD[ss[b]]??9)?i:b,0);
+  return{
+    worst:ss[wi]||'—',
+    ncr:ss.filter(s=>s==='CRITICAL').length,
+    npo:ss.filter(s=>s==='POOR').length,
+    maxhi:his.length?Math.max(...his):0
   };
+}
+
+function buildGiGroups(){
+  // Level 1: GI
+  const giMap=new Map();
+  filtered.forEach(r=>{
+    const gk=r.Gi||'';
+    if(!giMap.has(gk)) giMap.set(gk,{gi:r.Gi,upt:r.Upt,crit:r['Criticality Gi'],kv:r._kv,rows:[]});
+    giMap.get(gk).rows.push(r);
+  });
+
+  giGroups=[...giMap.values()].map(g=>{
+    // Level 2: Bay within GI
+    const bayMap=new Map();
+    g.rows.forEach(r=>{
+      const bk=r.Bay||'';
+      if(!bayMap.has(bk)) bayMap.set(bk,{bay:r.Bay,mtus:[]});
+      bayMap.get(bk).mtus.push(r);
+    });
+    const bays=[...bayMap.values()].map(b=>({...b,...aggStats(b.mtus)}));
+    return{...g,...aggStats(g.rows),nbay:bays.length,nmtu:g.rows.length,bays};
+  });
+}
+
+function sb(col){
+  if(scol===col) sdir=sdir==='asc'?'desc':'asc'; else{scol=col;sdir='desc';}
+  document.querySelectorAll('thead th').forEach(th=>{
+    th.classList.remove('sa','sd');
+    if(th.dataset.col===col) th.classList.add(sdir==='asc'?'sa':'sd');
+  });
+  page=1; renderTable();
+}
+
+function renderTable(){
+  let g=[...giGroups];
+  const numC=['kv','ncr','npo','maxhi','nbay','nmtu'];
+  g.sort((a,b)=>{
+    if(numC.includes(scol)){const va=a[scol]??0,vb=b[scol]??0;return sdir==='asc'?va-vb:vb-va;}
+    if(scol==='worst'){const oa=ST_ORD[a.worst]??9,ob=ST_ORD[b.worst]??9;return sdir==='asc'?oa-ob:ob-oa;}
+    if(scol==='crit'){
+      const oa=CRIT_ORD[(a.crit||'').toUpperCase()]??9,ob=CRIT_ORD[(b.crit||'').toUpperCase()]??9;
+      return sdir==='asc'?oa-ob:ob-oa;
+    }
+    const va=String(a[scol]||''),vb=String(b[scol]||'');
+    return sdir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
+  });
+
+  const tot=g.length, pages=Math.max(1,Math.ceil(tot/PAGE));
+  const st=(page-1)*PAGE, sl=g.slice(st,st+PAGE);
+  const tbody=document.getElementById('tbody');
+  if(!sl.length){tbody.innerHTML='<tr><td colspan="12" class="empty">Tidak ada data</td></tr>';}
+  else tbody.innerHTML=sl.map(x=>giHtml(x)).join('');
+  document.getElementById('pi').textContent=
+    `${(st+1).toLocaleString('id-ID')}–${Math.min(st+PAGE,tot).toLocaleString('id-ID')} dari ${tot.toLocaleString('id-ID')} GI`;
+  renderPag(pages);
+}
+
+// ── GI ROW (level 1) ─────────────────────────────────────────────────────────
+function giHtml(g){
+  const isOpen=expGi.has(g.gi), krit=giKrit.has((g.gi||'').trim());
+  const tier=giTierMap.get((g.gi||'').trim());
+  const ktt=giKttMap.get((g.gi||'').trim());
+  const bw=Math.min(55,g.maxhi/300*55);
+  const bc=g.maxhi>=150?'#ef4444':g.maxhi>=100?'#f59e0b':g.maxhi>=50?'#eab308':'#22c55e';
+  // collect rencana from all MTU rows that have it
+  const rencanaList=[...new Set(g.rows.map(r=>(r.Rencana||'').trim()).filter(v=>v&&v!=='nan'&&v!=='#N/A'))];
+  const rencanaStr=rencanaList.slice(0,2).join(' | ')+(rencanaList.length>2?` (+${rencanaList.length-2})`:'');
+  // tooltip: nama GI + KTT + Tier + status kritikal
+  const ttParts=[g.gi||''];
+  if(ktt) ttParts.push(`KTT: ${ktt}`);
+  if(tier) ttParts.push(`Tier: ${tier}`);
+  if(krit) ttParts.push('★ GI Kritikal');
+  const tt=ttParts.join('\n');
+  let h=`<tr class="row-gi">
+    <td style="text-align:center;padding:7px 6px">
+      <span class="exp-icon${isOpen?' open':''}" style="color:var(--accent)">▶</span>
+    </td>
+    <td title="${e(tt)}" style="${ktt?'cursor:help':''}">
+      <span class="gi-tgl" onclick="tgGi('${e(g.gi).replace(/'/g,"\\'")}')">
+        ${krit?'<span class="gkd"></span>':''}<span class="giname" style="font-weight:600">${e(g.gi||'—')}</span>
+      </span>${tier?`<span class="badge" style="margin-left:6px;background:rgba(99,102,241,.12);color:#a5b4fc;border:1px solid rgba(99,102,241,.25);font-size:9px">T${e(tier)}</span>`:''}${ktt?`<span class="badge" style="margin-left:4px;background:rgba(20,184,166,.12);color:var(--tel);border:1px solid rgba(20,184,166,.25);font-size:9px" title="${e(ktt)}">KTT</span>`:''}
+    </td>
+    <td><span style="font-family:var(--mono);font-size:11px;color:var(--text3)">${g.kv||'—'}</span></td>
+    <td>${critH(g.crit)}</td>
+    <td style="font-size:11px;color:var(--text3)">${e((g.upt||'').replace('UPT ',''))}</td>
+    <td>${stH(g.worst)}</td>
+    <td>${g.ncr>0?`<span style="color:var(--red);font-family:var(--mono);font-weight:600">${g.ncr}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+    <td>${g.npo>0?`<span style="color:var(--amb);font-family:var(--mono)">${g.npo}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+    <td><div class="hiwrap"><div class="hibar" style="width:${bw}px;background:${bc}"></div><span class="hival">${g.maxhi||'—'}</span></div></td>
+    <td><span style="font-family:var(--mono);font-size:11px;color:var(--text2)">${g.nbay}</span></td>
+    <td><span style="font-family:var(--mono);font-size:11px;color:var(--text2)">${g.nmtu}</span></td>
+    <td style="font-size:10px;color:var(--text3);max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${e(rencanaList.join('\n'))}">${e(rencanaStr||'—')}</td>
+  </tr>`;
+  if(isOpen) h+=g.bays.map(b=>bayHtml(g,b)).join('');
+  return h;
+}
+
+// ── BAY ROW (level 2) ────────────────────────────────────────────────────────
+function bayHtml(g,b){
+  const bk=(g.gi||'')+'\x00'+(b.bay||''), isOpen=expBay.has(bk);
+  const bw=Math.min(50,b.maxhi/300*50);
+  const bc=b.maxhi>=150?'#ef4444':b.maxhi>=100?'#f59e0b':b.maxhi>=50?'#eab308':'#22c55e';
+  // Rencana per bay: collect unique non-empty entries
+  const rBay=[...new Set(b.mtus.map(r=>(r.Rencana||'').trim()).filter(v=>v&&v!=='nan'&&v!=='#N/A'))];
+  const rBayStr=rBay[0]?e(rBay[0].substring(0,80)+(rBay[0].length>80?'…':'')):'—';
+  // encode key safely for inline onclick
+  const bkSafe=btoa(unescape(encodeURIComponent(bk)));
+  let h=`<tr class="row-bay">
+    <td style="text-align:center;padding:6px 6px">
+      <span class="exp-icon${isOpen?' open':''}">▶</span>
+    </td>
+    <td style="padding-left:28px">
+      <span class="bay-tgl" onclick="tgBayB64('${bkSafe}')">
+        <span class="bname">${e(b.bay||'—')}</span>
+      </span>
+      <span style="margin-left:6px;font-size:9px;font-family:var(--mono);color:var(--text3);background:var(--bg4);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">${e(b.mtus[0]?._bayKat||'')}</span>
+    </td>
+    <td></td><td></td>
+    <td style="font-size:11px;color:var(--text3)">${b.mtus.length} MTU</td>
+    <td>${stH(b.worst)}</td>
+    <td>${b.ncr>0?`<span style="color:var(--red);font-family:var(--mono)">${b.ncr}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+    <td>${b.npo>0?`<span style="color:var(--amb);font-family:var(--mono)">${b.npo}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+    <td><div class="hiwrap"><div class="hibar" style="width:${bw}px;background:${bc}"></div><span class="hival">${b.maxhi||'—'}</span></div></td>
+    <td colspan="2"></td>
+    <td style="font-size:10px;color:var(--text3);max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${e(rBay.join('\n'))}">${rBayStr}</td>
+  </tr>`;
+  if(isOpen) h+=b.mtus.map(r=>mtuH(r)).join('');
+  return h;
+}
+
+// ── MTU ROW (level 3) ────────────────────────────────────────────────────────
+function mtuH(r){
+  const hi=+r['Nilai Hi']||0, bw=Math.min(40,hi/300*40);
+  const bc=hi>=150?'#ef4444':hi>=100?'#f59e0b':hi>=50?'#eab308':'#22c55e';
+  const ren=(r.Rencana||'').trim();
+  const renClean=(ren==='nan'||ren==='#N/A')?'':ren;
+  return `<tr class="row-mtu">
+    <td></td>
+    <td style="padding-left:52px"><span class="badge" style="background:rgba(99,102,241,.1);color:#a5b4fc;border:1px solid rgba(99,102,241,.2);font-size:9px">${e(r['#']||'—')}</span></td>
+    <td style="color:var(--text2)">${e(r.Merek||'—')} <span style="color:var(--text3);font-size:10px">${e(r.Tipe||'')}</span></td>
+    <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">${r.Phasa||'—'}</td>
+    <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">${r['Tahun Buat']||'—'}${r._age!=null?` <span style="color:var(--text3)">(${r._age}th)</span>`:''}</td>
+    <td>${stH(r._se)}${r._adj?'<span class="badge b-adj">adj</span>':''}</td>
+    <td style="font-size:10px;color:var(--text3);max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${e(r['Justifikasi Prioritas']||'')}">${e(r['Justifikasi Prioritas']||'—')}</td>
+    <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">${e(r['Serial Id']||'—')}</td>
+    <td><div class="hiwrap"><div class="hibar" style="width:${bw}px;background:${bc}"></div><span class="hival">${hi||'—'}</span></div></td>
+    <td colspan="2"></td>
+    <td style="font-size:10px;color:var(--text2);max-width:220px;overflow:hidden;text-overflow:ellipsis" title="${e(renClean)}">${e(renClean.substring(0,80)+(renClean.length>80?'…':''))||'—'}</td>
+  </tr>`;
+}
+
+function tgGi(gi){ expGi.has(gi)?expGi.delete(gi):expGi.add(gi); renderTable(); }
+function tgBay(bk){ expBay.has(bk)?expBay.delete(bk):expBay.add(bk); renderTable(); }
+function tgBayB64(b64){ try{const bk=decodeURIComponent(escape(atob(b64)));tgBay(bk);}catch(e2){} }
+
+function expandAll(lvl){
+  // lvl=2: buka semua GI saja, lvl=3: buka GI + Bay
+  giGroups.forEach(g=>{
+    expGi.add(g.gi);
+    if(lvl>=3) g.bays.forEach(b=>expBay.add((g.gi||'')+'\x00'+(b.bay||'')));
+  });
+  renderTable();
+}
+function collapseAll(){ expGi.clear(); expBay.clear(); renderTable(); }
+
+const e=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function stH(s){
+  const v=(s||'').toUpperCase().trim();
+  const c=v==='CRITICAL'?'cr':v==='POOR'?'po':v==='FAIR'?'fa':v==='VERY GOOD'?'vg':'go';
+  return `<span class="badge b-${c}">${v||'—'}</span>`;
+}
+
+function critH(s){
+  const v=(s||'').toUpperCase().trim();
+  if(v==='EXTREME') return `<span class="badge b-ex">EXTREME</span>`;
+  if(v.includes('SANGAT TINGGI')) return `<span class="badge b-ex">SANGAT TINGGI</span>`;
+  if(v==='TINGGI') return `<span class="badge b-st">TINGGI</span>`;
+  if(v==='MODERAT'||v==='MODERATE') return `<span class="badge b-mo">MODERAT</span>`;
+  if(v==='RENDAH') return `<span class="badge b-re">RENDAH</span>`;
+  return `<span style="color:var(--text3);font-size:11px">${s||'—'}</span>`;
+}
+
+function setTab(t,btn){
+  tab=t;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); page=1; applyFilters();
+}
+
+function renderPag(pages){
+  const w=document.getElementById('pb'); w.innerHTML='';
+  const add=(lbl,pg,dis=false,act=false)=>{
+    const b=document.createElement('button');
+    b.className='pb'+(act?' on':'');b.textContent=lbl;b.disabled=dis;
+    b.onclick=()=>{page=pg;renderTable();};w.appendChild(b);
+  };
+  add('‹',page-1,page===1);
+  pgRange(page,pages).forEach(p=>{
+    if(p==='...'){const s=document.createElement('span');s.textContent='…';s.style.cssText='color:var(--text3);padding:0 3px;align-self:center;font-size:11px';w.appendChild(s);}
+    else add(p,p,false,p===page);
+  });
+  add('›',page+1,page===pages);
+}
+
+function pgRange(c,t){
+  if(t<=7)return Array.from({length:t},(_,i)=>i+1);
+  if(c<=4)return[1,2,3,4,5,'...',t];
+  if(c>=t-3)return[1,'...',t-4,t-3,t-2,t-1,t];
+  return[1,'...',c-1,c,c+1,'...',t];
+}
+
+let st_; document.getElementById('f-q').addEventListener('input',()=>{clearTimeout(st_);st_=setTimeout(applyFilters,300);});
+let st2_; document.getElementById('f-rencana').addEventListener('input',()=>{clearTimeout(st2_);st2_=setTimeout(applyFilters,300);});
+
+// ── SUPABASE CONFIG HANDLERS ─────────────────────────────────────────────────
+function openSbConfig(){
+  document.getElementById('sbUrlInput').value = localStorage.getItem('sb_url') || '';
+  document.getElementById('sbKeyInput').value = localStorage.getItem('sb_key') || '';
+  document.getElementById('sbConfigModal').style.display = 'flex';
+}
+function closeSbConfig(){
+  document.getElementById('sbConfigModal').style.display = 'none';
+}
+document.getElementById('sbSettingBtn').addEventListener('click',openSbConfig);
+document.getElementById('sbCancelBtn').addEventListener('click',closeSbConfig);
+document.getElementById('sbSaveBtn').addEventListener('click',()=>{
+  const url=document.getElementById('sbUrlInput').value.trim();
+  const key=document.getElementById('sbKeyInput').value.trim();
+  if(!url||!key){alert('URL dan Key wajib diisi!');return;}
+  localStorage.setItem('sb_url',url);
+  localStorage.setItem('sb_key',key);
+  closeSbConfig();
+  location.reload();
+});
+
+init().catch(err=>{
+  document.getElementById('ltxt').textContent='Gagal: '+err.message;
+  document.getElementById('lpct').textContent='✗';
+  document.getElementById('lpct').style.color='var(--red)';
+  setTimeout(()=>{
+    if(confirm('Gagal memuat data:\n\n'+err.message+'\n\nBuka pengaturan Supabase?')){
+      document.getElementById('loading').style.display='none';
+      openSbConfig();
+    }
+  },500);
+});
 </script>
 </body>
 </html>
