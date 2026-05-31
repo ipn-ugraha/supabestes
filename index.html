@@ -226,6 +226,30 @@ tbody td{padding:7px 10px;color:var(--text2);white-space:nowrap}
 </head>
 <body>
 
+<!-- LOGIN MODAL -->
+<div id="loginOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:32px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.6)">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.1em;margin-bottom:8px">AHI · MTU · UIT JBM</div>
+      <h2 style="font-size:20px;font-weight:600;color:var(--text);margin-bottom:6px">Login Dashboard</h2>
+      <p style="font-size:12px;color:var(--text3);font-family:var(--mono)">Masukkan kredensial akses</p>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Username</label>
+      <input type="text" id="loginUser" placeholder="admin" autocomplete="username" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none">
+    </div>
+    <div style="margin-bottom:8px">
+      <label style="display:block;font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Password</label>
+      <input type="password" id="loginPwd" placeholder="••••••••" autocomplete="current-password" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none">
+    </div>
+    <div id="loginError" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:8px 12px;margin:12px 0;font-family:var(--mono);font-size:11px;color:var(--red)"></div>
+    <button id="loginSubmitBtn" style="width:100%;padding:11px;background:var(--accent);border:none;color:#fff;border-radius:7px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;margin-top:14px">Login</button>
+    <div style="text-align:center;margin-top:18px;font-family:var(--mono);font-size:10px;color:var(--text3)">
+      Tidak punya akun? Hubungi admin.
+    </div>
+  </div>
+</div>
+
 <!-- EDIT MTU MODAL -->
 <div class="edit-overlay" id="editOverlay">
   <div class="edit-modal">
@@ -276,14 +300,6 @@ tbody td{padding:7px 10px;color:var(--text2);white-space:nowrap}
         </div>
       </div>
 
-      <div class="edit-section" id="editPwdSection">
-        <div class="edit-section-title">🔒 Konfirmasi Password</div>
-        <div class="edit-field">
-          <label class="edit-label">Password Admin</label>
-          <input type="password" class="edit-input" id="editPwd" placeholder="Masukkan password untuk konfirmasi">
-        </div>
-      </div>
-
     </div>
     <div class="edit-foot">
       <span class="edit-status" id="editStatus"></span>
@@ -308,14 +324,6 @@ tbody td{padding:7px 10px;color:var(--text2);white-space:nowrap}
       <button class="edit-close" id="uploadCloseBtn">✕</button>
     </div>
     <div class="edit-body">
-
-      <div class="edit-section">
-        <div class="edit-section-title">🔒 Autentikasi</div>
-        <div class="edit-field">
-          <label class="edit-label">Password Admin</label>
-          <input type="password" class="edit-input" id="uploadPwd" placeholder="Masukkan password admin">
-        </div>
-      </div>
 
       <div class="edit-section">
         <div class="edit-section-title">📁 File CSV</div>
@@ -394,9 +402,14 @@ tbody td{padding:7px 10px;color:var(--text2);white-space:nowrap}
   <div class="tright">
     <span id="last-update">—</span>
     <div id="gkbadge"><span class="bdot"></span><span id="gkn">0</span> GI Kritikal</div>
+    <div id="userBadge" style="display:none;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border2);padding:4px 10px;border-radius:20px;font-family:var(--mono);font-size:11px;color:var(--text2)">
+      <span id="userName">—</span>
+      <span id="userRole" style="background:var(--accent);color:#fff;padding:1px 7px;border-radius:10px;font-size:9px;text-transform:uppercase">—</span>
+    </div>
     <button id="downloadBtn" title="Download data CSV" style="background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer">↓ CSV</button>
-    <button id="uploadBtn" title="Upload CSV (admin)" style="background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer">↑ Upload</button>
+    <button id="uploadBtn" title="Upload CSV (admin only)" style="display:none;background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer">↑ Upload</button>
     <button id="sbSettingBtn" title="Pengaturan Supabase" style="background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer">⚙ DB</button>
+    <button id="logoutBtn" title="Logout" style="display:none;background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer">🚪 Logout</button>
   </div>
 </header>
 
@@ -624,10 +637,9 @@ let page=1, scol='maxhi', sdir='desc', tab='all';
 let expGi=new Set(), expBay=new Set(), charts={};
 let sbDb=null, editingIdx=-1;
 
-// ── ADMIN PASSWORD ───────────────────────────────────────────────────────────
-// GANTI password ini sesuai keinginan kamu
-const ADMIN_PASSWORD = 'admin123';
-let sessionAuth = false;
+// ── AUTH STATE ───────────────────────────────────────────────────────────────
+const AUTH_DOMAIN = '@ahi-mtu.local';
+let currentUser = null, currentRole = null;
 
 // ── KATEGORISASI BAY ─────────────────────────────────────────────────────────
 function katBay(b){
@@ -721,6 +733,20 @@ async function init(){
     setP(0,'URL Supabase tidak valid');
     throw new Error('URL Supabase tidak valid: '+e.message);
   }
+
+  // ── AUTH CHECK ─────────────────────────────────────────────────────────────
+  setP(2,'Memeriksa sesi login...');
+  const sessionRes = await db.auth.getSession();
+  if(!sessionRes.data.session){
+    document.getElementById('loading').style.display='none';
+    openLogin();
+    return;
+  }
+
+  currentUser = sessionRes.data.session.user;
+  setP(4,'Memuat role user...');
+  await loadUserRole();
+  showUserBadge();
 
   // Load gi_referensi (small table, single fetch)
   setP(5,'Memuat GI referensi dari Supabase...');
@@ -1302,9 +1328,10 @@ function mtuH(r){
   const ren=(r.Rencana||'').trim();
   const renClean=(ren==='nan'||ren==='#N/A')?'':ren;
   const rowIdx = raw.indexOf(r);
+  const canEdit = ['admin','editor'].includes(currentRole);
   return `<tr class="row-mtu">
     <td style="text-align:center;padding:6px 6px">
-      <button class="edit-btn" onclick="openEditMtu(${rowIdx})" title="Edit data MTU">✎</button>
+      ${canEdit ? `<button class="edit-btn" onclick="openEditMtu(${rowIdx})" title="Edit data MTU">✎</button>` : ''}
     </td>
     <td style="padding-left:52px"><span class="badge" style="background:rgba(99,102,241,.1);color:#a5b4fc;border:1px solid rgba(99,102,241,.2);font-size:9px">${e(r['#']||'—')}</span></td>
     <td style="color:var(--text2)">${e(r.Merek||'—')} <span style="color:var(--text3);font-size:10px">${e(r.Tipe||'')}</span></td>
@@ -1426,10 +1453,6 @@ function openEditMtu(idx){
   document.getElementById('eJust').value = r['Justifikasi Prioritas']||'';
   document.getElementById('eRencana').value = r.Rencana||'';
 
-  // Password always required for edit
-  document.getElementById('editPwd').value = '';
-  document.getElementById('editPwdSection').style.display = 'block';
-
   document.getElementById('editStatus').textContent = '';
   document.getElementById('editStatus').className = 'edit-status';
   document.getElementById('editSaveBtn').disabled = false;
@@ -1453,13 +1476,10 @@ async function saveEditMtu(){
   const r = raw[editingIdx];
   if(!sbDb){ alert('Database belum terhubung'); return; }
 
-  // Password check - ALWAYS required, never cached
-  const pwd = document.getElementById('editPwd').value;
-  if(pwd !== ADMIN_PASSWORD){
-    document.getElementById('editStatus').textContent = '✗ Password salah!';
+  // Auth check via role
+  if(!['admin','editor'].includes(currentRole)){
+    document.getElementById('editStatus').textContent = '✗ Akses ditolak. Role: '+(currentRole||'guest');
     document.getElementById('editStatus').className = 'edit-status err';
-    document.getElementById('editPwd').value = '';
-    document.getElementById('editPwd').focus();
     return;
   }
 
@@ -1558,7 +1578,10 @@ document.getElementById('downloadBtn').addEventListener('click',downloadCSV);
 let uploadedRows = null;
 
 function openUploadModal(){
-  document.getElementById('uploadPwd').value = '';
+  if(currentRole !== 'admin'){
+    showToast('Hanya admin yang bisa upload data','err');
+    return;
+  }
   document.getElementById('uploadFile').value = '';
   document.getElementById('uploadFileInfo').style.display = 'none';
   document.getElementById('uploadProgress').style.display = 'none';
@@ -1615,14 +1638,12 @@ function setUploadProgress(pct, text){
 }
 
 async function submitUpload(){
-  // Password check
-  const pwd = document.getElementById('uploadPwd').value;
-  if(pwd !== ADMIN_PASSWORD){
-    document.getElementById('uploadStatus').textContent = '✗ Password salah!';
+  // Auth check via role
+  if(currentRole !== 'admin'){
+    document.getElementById('uploadStatus').textContent = '✗ Hanya admin yang bisa upload';
     document.getElementById('uploadStatus').className = 'edit-status err';
     return;
   }
-  sessionAuth = true;
 
   if(!uploadedRows || uploadedRows.length===0){
     document.getElementById('uploadStatus').textContent = '✗ Pilih file CSV dulu';
@@ -1696,6 +1717,115 @@ async function submitUpload(){
 }
 
 document.getElementById('uploadSubmitBtn').addEventListener('click',submitUpload);
+
+// ── AUTH FUNCTIONS ───────────────────────────────────────────────────────────
+function openLogin(){
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPwd').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('loginOverlay').style.display = 'flex';
+  setTimeout(()=>document.getElementById('loginUser').focus(),100);
+}
+
+async function doLogin(){
+  const user = document.getElementById('loginUser').value.trim().toLowerCase();
+  const pwd = document.getElementById('loginPwd').value;
+  const errEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginSubmitBtn');
+
+  if(!user || !pwd){
+    errEl.textContent = '✗ Username dan password wajib diisi';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  if(!sbDb){
+    // Initialize db if not yet
+    const sbUrl = localStorage.getItem('sb_url');
+    const sbKey = localStorage.getItem('sb_key');
+    if(!sbUrl || !sbKey){
+      errEl.textContent = '✗ Setup Supabase dulu (klik ⚙ DB)';
+      errEl.style.display = 'block';
+      return;
+    }
+    sbDb = supabase.createClient(sbUrl, sbKey);
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Login...';
+  errEl.style.display = 'none';
+
+  const email = user + AUTH_DOMAIN;
+  const { data, error } = await sbDb.auth.signInWithPassword({email, password: pwd});
+
+  if(error){
+    errEl.textContent = '✗ '+error.message;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Login';
+    return;
+  }
+
+  currentUser = data.user;
+  document.getElementById('loginOverlay').style.display = 'none';
+  location.reload();
+}
+
+async function loadUserRole(){
+  if(!sbDb || !currentUser){ currentRole = null; return; }
+  try{
+    const { data, error } = await sbDb.from('user_roles')
+      .select('role, username')
+      .eq('user_id', currentUser.id)
+      .single();
+    if(error || !data){
+      currentRole = 'viewer'; // default
+    }else{
+      currentRole = data.role;
+      currentUser._username = data.username;
+    }
+  }catch(e){
+    currentRole = 'viewer';
+  }
+}
+
+function showUserBadge(){
+  if(!currentUser) return;
+  const username = currentUser._username || currentUser.email.split('@')[0];
+  document.getElementById('userName').textContent = username;
+  const roleEl = document.getElementById('userRole');
+  roleEl.textContent = currentRole || 'viewer';
+  // Color by role
+  const colors = {
+    admin: 'var(--red)',
+    editor: 'var(--amb)',
+    viewer: 'var(--text3)'
+  };
+  roleEl.style.background = colors[currentRole] || 'var(--text3)';
+  document.getElementById('userBadge').style.display = 'flex';
+  document.getElementById('logoutBtn').style.display = 'inline-block';
+  // Show upload button only for admin
+  if(currentRole === 'admin'){
+    document.getElementById('uploadBtn').style.display = 'inline-block';
+  }
+}
+
+async function doLogout(){
+  if(!confirm('Yakin mau logout?')) return;
+  if(sbDb) await sbDb.auth.signOut();
+  currentUser = null;
+  currentRole = null;
+  location.reload();
+}
+
+document.getElementById('loginSubmitBtn').addEventListener('click',doLogin);
+document.getElementById('logoutBtn').addEventListener('click',doLogout);
+document.getElementById('loginPwd').addEventListener('keydown',(e)=>{
+  if(e.key==='Enter') doLogin();
+});
+document.getElementById('loginUser').addEventListener('keydown',(e)=>{
+  if(e.key==='Enter') document.getElementById('loginPwd').focus();
+});
 
 init().catch(err=>{
   document.getElementById('ltxt').textContent='Gagal: '+err.message;
