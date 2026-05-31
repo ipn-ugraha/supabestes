@@ -114,7 +114,7 @@
   <div id="contentArea" style="display:none">
     <div class="tabs">
       <button class="tab active" data-tab="ahi" onclick="switchTab('ahi')">
-        AHI-MTU <span class="tab-count" id="countAhi">0</span>
+        AHI_MTU <span class="tab-count" id="countAhi">0</span>
       </button>
       <button class="tab" data-tab="ref" onclick="switchTab('ref')">
         gi_referensi <span class="tab-count" id="countRef">0</span>
@@ -140,8 +140,8 @@
 
       <div class="table-wrap">
         <div class="table-toolbar">
-          <span class="table-title">📋 Tabel: <span>AHI-MTU</span></span>
-          <input type="text" class="search-input" id="searchAhi" placeholder="🔍 Cari di AHI-MTU..." oninput="filterTable('ahi')" />
+          <span class="table-title">📋 Tabel: <span>AHI_MTU</span></span>
+          <input type="text" class="search-input" id="searchAhi" placeholder="🔍 Cari di AHI_MTU..." oninput="filterTable('ahi')" />
         </div>
         <div class="overflow-x" id="containerAhi">
           <div class="loading-state"><span class="spinner"></span> Memuat data...</div>
@@ -195,7 +195,7 @@
   var activeTab = 'ahi';
 
   var state = {
-    ahi: { table: 'AHI-MTU', allData: [], filtered: [], page: 1, sortAsc: {} },
+    ahi: { table: 'AHI_MTU', allData: [], filtered: [], page: 1, sortAsc: {} },
     ref: { table: 'gi_referensi', allData: [], filtered: [], page: 1, sortAsc: {} }
   };
 
