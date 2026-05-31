@@ -276,6 +276,14 @@ tbody td{padding:7px 10px;color:var(--text2);white-space:nowrap}
         </div>
       </div>
 
+      <div class="edit-section" id="editPwdSection">
+        <div class="edit-section-title">🔒 Konfirmasi Password</div>
+        <div class="edit-field">
+          <label class="edit-label">Password Admin</label>
+          <input type="password" class="edit-input" id="editPwd" placeholder="Masukkan password untuk konfirmasi">
+        </div>
+      </div>
+
     </div>
     <div class="edit-foot">
       <span class="edit-status" id="editStatus"></span>
@@ -288,6 +296,71 @@ tbody td{padding:7px 10px;color:var(--text2);white-space:nowrap}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- UPLOAD CSV MODAL -->
+<div class="edit-overlay" id="uploadOverlay">
+  <div class="edit-modal" style="max-width:520px">
+    <div class="edit-head">
+      <div>
+        <div class="edit-head-title">↑ Upload CSV ke Database</div>
+        <div class="edit-head-sub">Tabel: AHI_MTU</div>
+      </div>
+      <button class="edit-close" id="uploadCloseBtn">✕</button>
+    </div>
+    <div class="edit-body">
+
+      <div class="edit-section">
+        <div class="edit-section-title">🔒 Autentikasi</div>
+        <div class="edit-field">
+          <label class="edit-label">Password Admin</label>
+          <input type="password" class="edit-input" id="uploadPwd" placeholder="Masukkan password admin">
+        </div>
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">📁 File CSV</div>
+        <div class="edit-field">
+          <label class="edit-label">Pilih file</label>
+          <input type="file" id="uploadFile" accept=".csv" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:8px 10px;border-radius:6px;font-size:12px">
+        </div>
+        <div id="uploadFileInfo" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--text2)"></div>
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">⚙️ Strategi Upload</div>
+        <div class="edit-field">
+          <label style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;cursor:pointer;margin-bottom:6px">
+            <input type="radio" name="strategy" value="upsert" checked style="margin-top:3px">
+            <div>
+              <div style="font-size:12px;color:var(--text);font-weight:500">Update & Tambah (Upsert)</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:3px">Update row yang sudah ada (match Serial Id), tambah row baru. Aman.</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;cursor:pointer">
+            <input type="radio" name="strategy" value="replace" style="margin-top:3px">
+            <div>
+              <div style="font-size:12px;color:var(--red);font-weight:500">⚠️ Ganti Semua (Replace All)</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:3px">Hapus semua data lama, lalu insert dari CSV. <b style="color:var(--red)">Tidak bisa di-undo!</b></div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div id="uploadProgress" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;margin-top:8px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-family:var(--mono);font-size:11px;color:var(--text2)" id="uploadProgressText">Memproses...</span><span style="font-family:var(--mono);font-size:11px;color:var(--accent)" id="uploadProgressPct">0%</span></div>
+        <div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden"><div id="uploadProgressBar" style="height:100%;background:var(--accent);width:0%;transition:width .3s"></div></div>
+      </div>
+
+    </div>
+    <div class="edit-foot">
+      <span class="edit-status" id="uploadStatus"></span>
+      <div class="edit-btns">
+        <button class="btn-cancel" id="uploadCancelBtn">Batal</button>
+        <button class="btn-save" id="uploadSubmitBtn">Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- SUPABASE CONFIG MODAL -->
 <div id="sbConfigModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)">
@@ -332,6 +405,8 @@ tbody td{padding:7px 10px;color:var(--text2);white-space:nowrap}
   <div class="tright">
     <span id="last-update">—</span>
     <div id="gkbadge"><span class="bdot"></span><span id="gkn">0</span> GI Kritikal</div>
+    <button id="downloadBtn" title="Download data CSV" style="background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer">↓ CSV</button>
+    <button id="uploadBtn" title="Upload CSV (admin)" style="background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer">↑ Upload</button>
     <button id="sbSettingBtn" title="Pengaturan Supabase" style="background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 11px;border-radius:6px;font-family:var(--mono);font-size:11px;cursor:pointer">⚙ DB</button>
   </div>
 </header>
@@ -559,6 +634,11 @@ let raw=[], giKrit=new Set(), giTierMap=new Map(), giKttMap=new Map(), filtered=
 let page=1, scol='maxhi', sdir='desc', tab='all';
 let expGi=new Set(), expBay=new Set(), charts={};
 let sbDb=null, editingIdx=-1;
+
+// ── ADMIN PASSWORD ───────────────────────────────────────────────────────────
+// GANTI password ini sesuai keinginan kamu
+const ADMIN_PASSWORD = 'admin123';
+let sessionAuth = false;
 
 // ── KATEGORISASI BAY ─────────────────────────────────────────────────────────
 function katBay(b){
@@ -1357,6 +1437,10 @@ function openEditMtu(idx){
   document.getElementById('eJust').value = r['Justifikasi Prioritas']||'';
   document.getElementById('eRencana').value = r.Rencana||'';
 
+  // Password reset (hide if session already auth)
+  document.getElementById('editPwd').value = '';
+  document.getElementById('editPwdSection').style.display = sessionAuth ? 'none' : 'block';
+
   document.getElementById('editStatus').textContent = '';
   document.getElementById('editStatus').className = 'edit-status';
   document.getElementById('editSaveBtn').disabled = false;
@@ -1379,6 +1463,18 @@ async function saveEditMtu(){
   if(editingIdx<0) return;
   const r = raw[editingIdx];
   if(!sbDb){ alert('Database belum terhubung'); return; }
+
+  // Password check
+  if(!sessionAuth){
+    const pwd = document.getElementById('editPwd').value;
+    if(pwd !== ADMIN_PASSWORD){
+      document.getElementById('editStatus').textContent = '✗ Password salah!';
+      document.getElementById('editStatus').className = 'edit-status err';
+      return;
+    }
+    sessionAuth = true;
+    document.getElementById('editPwdSection').style.display = 'none';
+  }
 
   // Need an identifier - try id first, fall back to Serial Id
   const hasId = r.id !== undefined && r.id !== null;
@@ -1439,6 +1535,191 @@ document.getElementById('editSaveBtn').addEventListener('click',saveEditMtu);
 document.getElementById('editOverlay').addEventListener('click',(e)=>{
   if(e.target.id==='editOverlay') closeEditMtu();
 });
+
+// ── DOWNLOAD CSV ─────────────────────────────────────────────────────────────
+function downloadCSV(){
+  if(!raw || raw.length===0){ showToast('Tidak ada data untuk didownload','err'); return; }
+
+  // Strip internal fields (yang diawali _)
+  const cleanData = raw.map(r=>{
+    const obj = {};
+    Object.keys(r).forEach(k=>{
+      if(!k.startsWith('_')) obj[k] = r[k];
+    });
+    return obj;
+  });
+
+  const csv = Papa.unparse(cleanData);
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const ts = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `AHI_MTU_${ts}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`✓ Download ${cleanData.length} baris`,'ok');
+}
+document.getElementById('downloadBtn').addEventListener('click',downloadCSV);
+
+// ── UPLOAD CSV ───────────────────────────────────────────────────────────────
+let uploadedRows = null;
+
+function openUploadModal(){
+  document.getElementById('uploadPwd').value = '';
+  document.getElementById('uploadFile').value = '';
+  document.getElementById('uploadFileInfo').style.display = 'none';
+  document.getElementById('uploadProgress').style.display = 'none';
+  document.getElementById('uploadStatus').textContent = '';
+  document.getElementById('uploadStatus').className = 'edit-status';
+  document.getElementById('uploadSubmitBtn').disabled = false;
+  document.getElementById('uploadSubmitBtn').textContent = 'Upload';
+  uploadedRows = null;
+  document.getElementById('uploadOverlay').classList.add('open');
+}
+function closeUploadModal(){
+  document.getElementById('uploadOverlay').classList.remove('open');
+}
+
+document.getElementById('uploadBtn').addEventListener('click',openUploadModal);
+document.getElementById('uploadCloseBtn').addEventListener('click',closeUploadModal);
+document.getElementById('uploadCancelBtn').addEventListener('click',closeUploadModal);
+document.getElementById('uploadOverlay').addEventListener('click',(e)=>{
+  if(e.target.id==='uploadOverlay') closeUploadModal();
+});
+
+document.getElementById('uploadFile').addEventListener('change',function(e){
+  const file = e.target.files[0];
+  if(!file){ uploadedRows=null; document.getElementById('uploadFileInfo').style.display='none'; return; }
+
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    dynamicTyping: false,
+    complete: function(results){
+      if(results.errors && results.errors.length>0){
+        showToast('Error parsing CSV: '+results.errors[0].message,'err');
+        return;
+      }
+      uploadedRows = results.data;
+      const info = document.getElementById('uploadFileInfo');
+      const cols = uploadedRows.length>0 ? Object.keys(uploadedRows[0]) : [];
+      info.innerHTML = `📄 <b>${file.name}</b><br>` +
+        `📊 ${uploadedRows.length.toLocaleString()} baris × ${cols.length} kolom<br>` +
+        `<span style="color:var(--text3);font-size:10px">Kolom: ${cols.slice(0,8).join(', ')}${cols.length>8?'...':''}</span>`;
+      info.style.display = 'block';
+    },
+    error: function(err){
+      showToast('Gagal parsing: '+err.message,'err');
+    }
+  });
+});
+
+function setUploadProgress(pct, text){
+  document.getElementById('uploadProgress').style.display = 'block';
+  document.getElementById('uploadProgressBar').style.width = pct+'%';
+  document.getElementById('uploadProgressPct').textContent = pct+'%';
+  document.getElementById('uploadProgressText').textContent = text;
+}
+
+async function submitUpload(){
+  // Password check
+  const pwd = document.getElementById('uploadPwd').value;
+  if(pwd !== ADMIN_PASSWORD){
+    document.getElementById('uploadStatus').textContent = '✗ Password salah!';
+    document.getElementById('uploadStatus').className = 'edit-status err';
+    return;
+  }
+  sessionAuth = true;
+
+  if(!uploadedRows || uploadedRows.length===0){
+    document.getElementById('uploadStatus').textContent = '✗ Pilih file CSV dulu';
+    document.getElementById('uploadStatus').className = 'edit-status err';
+    return;
+  }
+
+  if(!sbDb){ alert('Database belum terhubung'); return; }
+
+  const strategy = document.querySelector('input[name="strategy"]:checked').value;
+
+  // Confirm if replace all
+  if(strategy === 'replace'){
+    if(!confirm(`⚠️ PERINGATAN!\n\nSemua data lama di tabel AHI_MTU akan DIHAPUS, lalu diganti dengan ${uploadedRows.length} baris dari CSV.\n\nAksi ini TIDAK BISA DIBATALKAN.\n\nLanjutkan?`)){
+      return;
+    }
+  }
+
+  const submitBtn = document.getElementById('uploadSubmitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Uploading...';
+
+  // Strip internal fields & id (let DB auto-generate for new rows)
+  const cleanRows = uploadedRows.map(r=>{
+    const obj = {};
+    Object.keys(r).forEach(k=>{
+      if(!k.startsWith('_') && k !== 'id') obj[k] = r[k];
+    });
+    return obj;
+  });
+
+  try{
+    // STEP 1: If replace, delete all existing
+    if(strategy === 'replace'){
+      setUploadProgress(5, 'Menghapus data lama...');
+      // Use a filter that matches all - delete with neq impossible value
+      const delRes = await sbDb.from(SB_TABLE_AHI).delete().neq('Gi','___NEVER_MATCH___');
+      if(delRes.error) throw new Error('Gagal hapus data lama: '+delRes.error.message);
+    }
+
+    // STEP 2: Insert/Upsert in chunks
+    const CHUNK = 500;
+    const totalChunks = Math.ceil(cleanRows.length / CHUNK);
+    let inserted = 0;
+
+    for(let i=0; i<totalChunks; i++){
+      const from = i*CHUNK;
+      const to = Math.min((i+1)*CHUNK, cleanRows.length);
+      const chunk = cleanRows.slice(from, to);
+      const pct = 10 + Math.round((i/totalChunks)*85);
+      setUploadProgress(pct, `Upload chunk ${i+1}/${totalChunks} (${inserted+chunk.length}/${cleanRows.length})`);
+
+      let result;
+      if(strategy === 'upsert'){
+        // Upsert by Serial Id (assumes Serial Id is unique constraint)
+        result = await sbDb.from(SB_TABLE_AHI).upsert(chunk, {onConflict:'Serial Id'});
+      } else {
+        // Replace: just insert
+        result = await sbDb.from(SB_TABLE_AHI).insert(chunk);
+      }
+      if(result.error) throw new Error(`Chunk ${i+1}: ${result.error.message}`);
+      inserted += chunk.length;
+    }
+
+    setUploadProgress(100, '✓ Selesai!');
+    showToast(`✓ Berhasil upload ${inserted.toLocaleString()} baris`,'ok');
+
+    document.getElementById('uploadStatus').textContent = `✓ ${inserted.toLocaleString()} baris berhasil`;
+    document.getElementById('uploadStatus').className = 'edit-status ok';
+
+    setTimeout(()=>{
+      closeUploadModal();
+      if(confirm('Upload berhasil! Reload halaman untuk melihat data terbaru?')){
+        location.reload();
+      }
+    }, 1200);
+
+  }catch(err){
+    document.getElementById('uploadStatus').textContent = '✗ '+err.message;
+    document.getElementById('uploadStatus').className = 'edit-status err';
+    showToast('✗ Gagal: '+err.message,'err');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Upload';
+  }
+}
+
+document.getElementById('uploadSubmitBtn').addEventListener('click',submitUpload);
 
 init().catch(err=>{
   document.getElementById('ltxt').textContent='Gagal: '+err.message;
