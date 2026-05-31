@@ -1,78 +1,98 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>View Tabel AHI-MTU</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0a0e1a; --surface: #111827; --surface2: #0f172a;
-      --border: #1f2d45; --accent: #3ecf8e; --text: #e2e8f0;
-      --muted: #64748b; --error: #f87171;
-      --mono: 'JetBrains Mono', monospace; --sans: 'Syne', sans-serif;
-    }
-    body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; padding: 32px 24px; }
-    .container { max-width: 1100px; margin: 0 auto; }
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
-    .badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(62,207,142,0.1); border: 1px solid rgba(62,207,142,0.2); border-radius: 20px; padding: 4px 12px; font-family: var(--mono); font-size: 11px; color: var(--accent); margin-bottom: 10px; }
-    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-    h1 { font-size: 28px; font-weight: 800; }
-    h1 span { color: var(--accent); }
-    .btn { padding: 10px 20px; border-radius: 7px; border: none; font-family: var(--mono); font-size: 11px; font-weight: 600; cursor: pointer; text-transform: uppercase; }
-    .btn-primary { background: var(--accent); color: #0a0e1a; }
-    .btn-primary:hover { background: #5ce0a5; }
-    .btn-secondary { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-    .config-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; display: none; }
-    .config-card.show { display: block; }
-    .config-card .field { margin-bottom: 12px; }
-    .config-card label { display: block; font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
-    .config-card input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; color: var(--text); font-family: var(--mono); font-size: 12px; outline: none; }
-    .stats-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; min-width: 140px; }
-    .stat-label { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
-    .stat-value { font-size: 22px; font-weight: 800; color: var(--accent); }
-    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-    .table-toolbar { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; }
-    .table-title { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-    .table-title span { color: var(--accent); }
-    input[type="text"], input[type="password"] { background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; color: var(--text); font-family: var(--mono); font-size: 12px; outline: none; }
-    .search-input { width: 220px; }
-    .overflow-x { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
-    thead tr { background: var(--surface2); border-bottom: 1px solid var(--border); }
-    th { padding: 12px 16px; text-align: left; font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 600; cursor: pointer; }
-    th:hover { color: var(--accent); }
-    tbody tr { border-bottom: 1px solid rgba(31,45,69,0.6); }
-    tbody tr:hover { background: rgba(62,207,142,0.03); }
-    td { padding: 11px 16px; color: #94a3b8; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    td:first-child { color: var(--text); font-weight: 600; }
-    .status-msg { padding: 12px 16px; border-radius: 8px; font-family: var(--mono); font-size: 12px; margin-bottom: 16px; display: none; }
-    .status-msg.show { display: block; }
-    .status-msg.error { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: var(--error); }
-    .status-msg.success { background: rgba(62,207,142,0.06); border: 1px solid rgba(62,207,142,0.15); color: var(--accent); }
-    .pagination { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--muted); flex-wrap: wrap; gap: 10px; }
-    .page-btns { display: flex; gap: 6px; flex-wrap: wrap; }
-    .page-btn { padding: 5px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-family: var(--mono); font-size: 11px; cursor: pointer; }
-    .page-btn.active { background: var(--accent); color: #0a0e1a; }
-    .welcome { padding: 60px 20px; text-align: center; }
-    .welcome h2 { font-size: 20px; margin-bottom: 12px; }
-    .welcome p { color: var(--muted); font-family: var(--mono); font-size: 13px; margin-bottom: 20px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cek Database Supabase - AHI MTU</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #1c1f23; --bg2: #23272d; --bg3: #2a2f38; --bg4: #323842;
+    --border: rgba(255,255,255,0.09); --border2: rgba(255,255,255,0.16);
+    --text: #f0f2f5; --text2: #a8b0bc; --text3: #6b7585;
+    --accent: #3b82f6; --accent2: #1d4ed8;
+    --red: #ef4444; --grn: #22c55e; --amb: #f59e0b;
+    --font: 'IBM Plex Sans', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; min-height: 100vh; }
+  .topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 52px; position: sticky; top: 0; z-index: 100; }
+  .logo { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: .05em; }
+  .ttitle { font-size: 12px; color: var(--text2); margin-left: 14px; }
+  .btn { padding: 7px 14px; border-radius: 7px; border: none; font-family: var(--font); font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-secondary { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+  .btn-secondary:hover { background: var(--bg3); color: var(--text); }
+  .main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+  .config-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 16px; display: none; }
+  .config-card.show { display: block; }
+  .config-card .field { margin-bottom: 12px; }
+  .config-card label { display: block; font-family: var(--mono); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .config-card input { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 7px; padding: 9px 12px; color: var(--text); font-family: var(--mono); font-size: 12px; outline: none; }
+  .config-card input:focus { border-color: var(--accent); }
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; background: var(--bg2); padding: 6px; border-radius: 10px; border: 1px solid var(--border); width: fit-content; }
+  .tab { padding: 8px 16px; border-radius: 6px; border: none; background: transparent; color: var(--text2); font-family: var(--font); font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s; }
+  .tab:hover { color: var(--text); background: var(--bg3); }
+  .tab.active { background: var(--accent); color: #fff; }
+  .tab-count { background: rgba(255,255,255,0.15); padding: 1px 7px; border-radius: 10px; font-size: 10px; margin-left: 6px; font-family: var(--mono); }
+  .tab.active .tab-count { background: rgba(255,255,255,0.2); }
+  .status-msg { padding: 10px 14px; border-radius: 8px; font-family: var(--mono); font-size: 12px; margin-bottom: 14px; display: none; }
+  .status-msg.show { display: block; }
+  .status-msg.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
+  .status-msg.success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: var(--grn); }
+  .status-msg.loading { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--amb); }
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .stat-label { font-family: var(--mono); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+  .stat-value { font-size: 22px; font-weight: 600; color: var(--text); line-height: 1; }
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.grn { color: var(--grn); }
+  .table-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .table-toolbar { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .table-title { font-family: var(--mono); font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+  .table-title span { color: var(--accent); }
+  .search-input { background: var(--bg3); border: 1px solid var(--border2); border-radius: 7px; padding: 7px 12px; color: var(--text); font-family: var(--font); font-size: 12px; outline: none; width: 240px; }
+  .search-input:focus { border-color: var(--accent); }
+  .overflow-x { overflow-x: auto; max-height: 600px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead tr { background: var(--bg3); position: sticky; top: 0; z-index: 5; }
+  th { padding: 9px 12px; text-align: left; font-size: 9px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; white-space: nowrap; cursor: pointer; user-select: none; border-bottom: 1px solid var(--border); }
+  th:hover { color: var(--text2); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  td { padding: 8px 12px; color: var(--text2); white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+  td:first-child { color: var(--text); font-weight: 500; }
+  .pagination { padding: 12px 14px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--text3); flex-wrap: wrap; gap: 10px; align-items: center; }
+  .page-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+  .page-btn { padding: 4px 10px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 5px; color: var(--text2); font-family: var(--mono); font-size: 11px; cursor: pointer; }
+  .page-btn:hover { color: var(--text); border-color: var(--accent); }
+  .page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .welcome { padding: 60px 20px; text-align: center; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; }
+  .welcome h2 { font-size: 18px; margin-bottom: 8px; font-weight: 600; }
+  .welcome p { color: var(--text3); font-family: var(--mono); font-size: 12px; margin-bottom: 16px; }
+  .loading-state { padding: 60px 20px; text-align: center; color: var(--text3); font-family: var(--mono); font-size: 12px; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(59,130,246,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .tab-section { display: none; }
+  .tab-section.active { display: block; }
+</style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <div>
-      <div class="badge"><div class="dot"></div> Supabase Viewer</div>
-      <h1>Tabel <span>AHI-MTU</span></h1>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-secondary" onclick="toggleConfig()">Setting</button>
-      <button class="btn btn-primary" onclick="loadData()">Refresh</button>
-    </div>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center">
+    <span class="logo">SUPABASE_DB_VIEWER</span>
+    <span class="ttitle">| AHI MTU - Database Check</span>
   </div>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-secondary" onclick="toggleConfig()">⚙ Setting</button>
+    <button class="btn btn-primary" onclick="loadAllData()">↻ Refresh</button>
+  </div>
+</div>
+
+<div class="main">
 
   <div class="config-card" id="configCard">
     <div class="field">
@@ -83,41 +103,101 @@
       <label>Anon Key</label>
       <input type="password" id="keyInput" placeholder="eyJhbGci..." />
     </div>
-    <button class="btn btn-primary" onclick="saveConfig()">Simpan & Load</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="saveConfig()">Simpan & Load</button>
+      <button class="btn btn-secondary" onclick="clearConfig()">Hapus</button>
+    </div>
   </div>
 
   <div class="status-msg" id="statusMsg"></div>
 
-  <div class="stats-row" id="statsRow" style="display:none">
-    <div class="stat"><div class="stat-label">Total Baris</div><div class="stat-value" id="statTotal">0</div></div>
-    <div class="stat"><div class="stat-label">Total Kolom</div><div class="stat-value" id="statKolom">0</div></div>
-  </div>
-
-  <div class="table-wrap" id="tableWrap" style="display:none">
-    <div class="table-toolbar">
-      <span class="table-title">Tabel: <span>AHI-MTU</span></span>
-      <input type="text" class="search-input" id="searchInput" placeholder="Cari data..." oninput="filterData()" />
+  <div id="contentArea" style="display:none">
+    <div class="tabs">
+      <button class="tab active" data-tab="ahi" onclick="switchTab('ahi')">
+        AHI-MTU <span class="tab-count" id="countAhi">0</span>
+      </button>
+      <button class="tab" data-tab="ref" onclick="switchTab('ref')">
+        gi_referensi <span class="tab-count" id="countRef">0</span>
+      </button>
     </div>
-    <div class="overflow-x" id="tableContainer"></div>
-    <div class="pagination" id="pagination"></div>
+
+    <!-- TAB AHI-MTU -->
+    <div class="tab-section active" id="section-ahi">
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-label">Total Baris</div>
+          <div class="stat-value accent" id="ahiTotal">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Total Kolom</div>
+          <div class="stat-value" id="ahiKolom">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Status</div>
+          <div class="stat-value grn" id="ahiStatus" style="font-size:14px">—</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <span class="table-title">📋 Tabel: <span>AHI-MTU</span></span>
+          <input type="text" class="search-input" id="searchAhi" placeholder="🔍 Cari di AHI-MTU..." oninput="filterTable('ahi')" />
+        </div>
+        <div class="overflow-x" id="containerAhi">
+          <div class="loading-state"><span class="spinner"></span> Memuat data...</div>
+        </div>
+        <div class="pagination" id="paginationAhi"></div>
+      </div>
+    </div>
+
+    <!-- TAB gi_referensi -->
+    <div class="tab-section" id="section-ref">
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-label">Total Baris</div>
+          <div class="stat-value accent" id="refTotal">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Total Kolom</div>
+          <div class="stat-value" id="refKolom">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Status</div>
+          <div class="stat-value grn" id="refStatus" style="font-size:14px">—</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <span class="table-title">📋 Tabel: <span>gi_referensi</span></span>
+          <input type="text" class="search-input" id="searchRef" placeholder="🔍 Cari di gi_referensi..." oninput="filterTable('ref')" />
+        </div>
+        <div class="overflow-x" id="containerRef">
+          <div class="loading-state"><span class="spinner"></span> Memuat data...</div>
+        </div>
+        <div class="pagination" id="paginationRef"></div>
+      </div>
+    </div>
   </div>
 
   <div class="welcome" id="welcome">
-    <h2>Selamat Datang!</h2>
-    <p>Isi Project URL & Anon Key untuk mulai melihat data</p>
+    <h2>Selamat Datang</h2>
+    <p>Isi Project URL & Anon Key untuk mulai cek database</p>
     <button class="btn btn-primary" onclick="toggleConfig()">Mulai Setup</button>
   </div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  var TABLE = 'AHI-MTU';
-  var PAGE_SIZE = 20;
-  var allData = [];
-  var filteredData = [];
-  var currentPage = 1;
-  var sortAsc = {};
+  var PAGE_SIZE = 25;
   var db = null;
+  var activeTab = 'ahi';
+
+  var state = {
+    ahi: { table: 'AHI-MTU', allData: [], filtered: [], page: 1, sortAsc: {} },
+    ref: { table: 'gi_referensi', allData: [], filtered: [], page: 1, sortAsc: {} }
+  };
 
   function toggleConfig() {
     var card = document.getElementById('configCard');
@@ -139,7 +219,20 @@
       localStorage.setItem('sb_key', key);
     } catch(e) {}
     document.getElementById('configCard').classList.remove('show');
-    loadData();
+    loadAllData();
+  }
+
+  function clearConfig() {
+    if (!confirm('Hapus URL dan Key dari browser?')) return;
+    try {
+      localStorage.removeItem('sb_url');
+      localStorage.removeItem('sb_key');
+    } catch(e) {}
+    document.getElementById('urlInput').value = '';
+    document.getElementById('keyInput').value = '';
+    document.getElementById('welcome').style.display = 'block';
+    document.getElementById('contentArea').style.display = 'none';
+    setStatus('success', 'Kredensial berhasil dihapus');
   }
 
   function setStatus(type, msg) {
@@ -148,7 +241,15 @@
     el.textContent = msg;
   }
 
-  function loadData() {
+  function switchTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-section').forEach(function(s) { s.classList.remove('active'); });
+    document.querySelector('.tab[data-tab="' + tab + '"]').classList.add('active');
+    document.getElementById('section-' + tab).classList.add('active');
+  }
+
+  function loadAllData() {
     var url, key;
     try {
       url = localStorage.getItem('sb_url');
@@ -157,13 +258,10 @@
 
     if (!url || !key) {
       document.getElementById('welcome').style.display = 'block';
-      document.getElementById('tableWrap').style.display = 'none';
+      document.getElementById('contentArea').style.display = 'none';
       setStatus('error', 'Isi Project URL dan Anon Key dulu (klik tombol Setting)');
       return;
     }
-
-    document.getElementById('welcome').style.display = 'none';
-    document.getElementById('tableWrap').style.display = 'block';
 
     try {
       db = supabase.createClient(url, key);
@@ -172,49 +270,97 @@
       return;
     }
 
-    setStatus('success', 'Memuat data...');
+    document.getElementById('welcome').style.display = 'none';
+    document.getElementById('contentArea').style.display = 'block';
+    setStatus('loading', '⏳ Memuat data dari kedua tabel...');
 
-    db.from(TABLE).select('*').then(function(result) {
-      if (result.error) {
-        setStatus('error', 'Error: ' + result.error.message);
-        return;
+    // Load both tables in parallel
+    Promise.all([
+      loadTable('ahi'),
+      loadTable('ref')
+    ]).then(function(results) {
+      var ahiOk = results[0];
+      var refOk = results[1];
+      if (ahiOk && refOk) {
+        setStatus('success', '✓ Kedua tabel berhasil dimuat');
+      } else if (ahiOk || refOk) {
+        setStatus('error', '⚠ Sebagian tabel gagal dimuat - cek detail di masing-masing tab');
+      } else {
+        setStatus('error', '✗ Kedua tabel gagal dimuat');
       }
-      allData = result.data || [];
-      filteredData = allData.slice();
-      currentPage = 1;
-      document.getElementById('statTotal').textContent = allData.length.toLocaleString();
-      document.getElementById('statKolom').textContent = allData.length > 0 ? Object.keys(allData[0]).length : 0;
-      document.getElementById('statsRow').style.display = 'flex';
-      setStatus('success', allData.length.toLocaleString() + ' baris dimuat');
-      renderTable();
-    }, function(err) {
-      setStatus('error', 'Gagal: ' + err.message);
     });
   }
 
-  function renderTable() {
-    if (allData.length === 0) {
-      document.getElementById('tableContainer').innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted);font-family:var(--mono)">Tabel kosong</div>';
-      return;
-    }
-    var headers = Object.keys(allData[0]);
-    var thHTML = '';
-    for (var i = 0; i < headers.length; i++) {
-      thHTML += '<th onclick="sortBy(\'' + headers[i] + '\')">' + headers[i] + '</th>';
-    }
-    document.getElementById('tableContainer').innerHTML = '<table><thead><tr>' + thHTML + '</tr></thead><tbody id="tableBody"></tbody></table>';
-    renderPage();
+  function loadTable(tabKey) {
+    var s = state[tabKey];
+    var prefix = tabKey === 'ahi' ? 'ahi' : 'ref';
+
+    document.getElementById(prefix + 'Status').textContent = 'Loading...';
+    document.getElementById(prefix + 'Status').className = 'stat-value';
+    document.getElementById(prefix + 'Status').style.fontSize = '14px';
+    document.getElementById('container' + prefix.charAt(0).toUpperCase() + prefix.slice(1)).innerHTML =
+      '<div class="loading-state"><span class="spinner"></span> Memuat ' + s.table + '...</div>';
+
+    return db.from(s.table).select('*').then(function(result) {
+      if (result.error) {
+        document.getElementById(prefix + 'Status').textContent = '✗ Error';
+        document.getElementById(prefix + 'Status').classList.add('red');
+        document.getElementById(prefix + 'Status').style.color = 'var(--red)';
+        document.getElementById('container' + prefix.charAt(0).toUpperCase() + prefix.slice(1)).innerHTML =
+          '<div class="loading-state" style="color:var(--red)">✗ ' + result.error.message + '</div>';
+        return false;
+      }
+
+      s.allData = result.data || [];
+      s.filtered = s.allData.slice();
+      s.page = 1;
+
+      document.getElementById(prefix + 'Total').textContent = s.allData.length.toLocaleString();
+      document.getElementById(prefix + 'Kolom').textContent = s.allData.length > 0 ? Object.keys(s.allData[0]).length : 0;
+      document.getElementById(prefix + 'Status').textContent = '✓ OK';
+      document.getElementById(prefix + 'Status').style.color = 'var(--grn)';
+      document.getElementById('count' + prefix.charAt(0).toUpperCase() + prefix.slice(1)).textContent = s.allData.length;
+
+      renderTable(tabKey);
+      return true;
+    }, function(err) {
+      document.getElementById(prefix + 'Status').textContent = '✗ Failed';
+      document.getElementById(prefix + 'Status').style.color = 'var(--red)';
+      document.getElementById('container' + prefix.charAt(0).toUpperCase() + prefix.slice(1)).innerHTML =
+        '<div class="loading-state" style="color:var(--red)">✗ ' + err.message + '</div>';
+      return false;
+    });
   }
 
-  function renderPage() {
-    var start = (currentPage - 1) * PAGE_SIZE;
-    var pageData = filteredData.slice(start, start + PAGE_SIZE);
-    var headers = Object.keys(allData[0]);
-    var body = document.getElementById('tableBody');
+  function renderTable(tabKey) {
+    var s = state[tabKey];
+    var prefix = tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
+    var container = document.getElementById('container' + prefix);
+
+    if (s.allData.length === 0) {
+      container.innerHTML = '<div class="loading-state">Tabel kosong</div>';
+      return;
+    }
+
+    var headers = Object.keys(s.allData[0]);
+    var thHTML = '';
+    for (var i = 0; i < headers.length; i++) {
+      thHTML += '<th onclick="sortBy(\'' + tabKey + '\', \'' + headers[i].replace(/'/g, "\\'") + '\')">' + headers[i] + '</th>';
+    }
+    container.innerHTML = '<table><thead><tr>' + thHTML + '</tr></thead><tbody id="tbody-' + tabKey + '"></tbody></table>';
+    renderPage(tabKey);
+  }
+
+  function renderPage(tabKey) {
+    var s = state[tabKey];
+    var start = (s.page - 1) * PAGE_SIZE;
+    var pageData = s.filtered.slice(start, start + PAGE_SIZE);
+    var headers = Object.keys(s.allData[0]);
+    var body = document.getElementById('tbody-' + tabKey);
     if (!body) return;
 
-    if (filteredData.length === 0) {
-      body.innerHTML = '<tr><td colspan="' + headers.length + '" style="text-align:center;padding:40px;color:var(--muted)">Data tidak ditemukan</td></tr>';
+    if (s.filtered.length === 0) {
+      body.innerHTML = '<tr><td colspan="' + headers.length + '" style="text-align:center;padding:40px;color:var(--text3)">Data tidak ditemukan</td></tr>';
     } else {
       var rows = '';
       for (var i = 0; i < pageData.length; i++) {
@@ -222,60 +368,76 @@
         var cells = '';
         for (var j = 0; j < headers.length; j++) {
           var val = row[headers[j]];
-          var display = (val === null || val === undefined) ? '-' : val;
-          cells += '<td>' + display + '</td>';
+          var display = (val === null || val === undefined || val === '') ? '<span style="color:var(--text3)">—</span>' : escapeHtml(String(val));
+          var titleVal = (val === null || val === undefined) ? '' : String(val).replace(/"/g, '&quot;');
+          cells += '<td title="' + titleVal + '">' + display + '</td>';
         }
         rows += '<tr>' + cells + '</tr>';
       }
       body.innerHTML = rows;
     }
-    renderPagination();
+    renderPagination(tabKey);
   }
 
-  function renderPagination() {
-    var total = filteredData.length;
+  function renderPagination(tabKey) {
+    var s = state[tabKey];
+    var prefix = tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
+    var total = s.filtered.length;
     var totalPages = Math.ceil(total / PAGE_SIZE);
-    var start = (currentPage - 1) * PAGE_SIZE + 1;
-    var end = Math.min(currentPage * PAGE_SIZE, total);
-    var el = document.getElementById('pagination');
+    var start = (s.page - 1) * PAGE_SIZE + 1;
+    var end = Math.min(s.page * PAGE_SIZE, total);
+    var el = document.getElementById('pagination' + prefix);
     if (total === 0) { el.innerHTML = ''; return; }
+
     var btns = '';
     for (var i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
-        btns += '<button class="page-btn ' + (i === currentPage ? 'active' : '') + '" onclick="goPage(' + i + ')">' + i + '</button>';
-      } else if (Math.abs(i - currentPage) === 2) {
-        btns += '<span style="color:var(--muted);padding:0 4px">...</span>';
+      if (i === 1 || i === totalPages || Math.abs(i - s.page) <= 1) {
+        btns += '<button class="page-btn ' + (i === s.page ? 'active' : '') + '" onclick="goPage(\'' + tabKey + '\', ' + i + ')">' + i + '</button>';
+      } else if (Math.abs(i - s.page) === 2) {
+        btns += '<span style="color:var(--text3);padding:0 4px">...</span>';
       }
     }
     el.innerHTML = '<span>Menampilkan ' + start + '-' + end + ' dari ' + total.toLocaleString() + ' baris</span><div class="page-btns">' + btns + '</div>';
   }
 
-  function goPage(p) { currentPage = p; renderPage(); }
+  function goPage(tabKey, p) {
+    state[tabKey].page = p;
+    renderPage(tabKey);
+  }
 
-  function filterData() {
-    var q = document.getElementById('searchInput').value.toLowerCase();
-    filteredData = allData.filter(function(row) {
+  function filterTable(tabKey) {
+    var s = state[tabKey];
+    var inputId = tabKey === 'ahi' ? 'searchAhi' : 'searchRef';
+    var q = document.getElementById(inputId).value.toLowerCase();
+    s.filtered = s.allData.filter(function(row) {
       var vals = Object.values(row);
       for (var i = 0; i < vals.length; i++) {
         if (String(vals[i] || '').toLowerCase().indexOf(q) !== -1) return true;
       }
       return false;
     });
-    currentPage = 1;
-    renderPage();
+    s.page = 1;
+    renderPage(tabKey);
   }
 
-  function sortBy(col) {
-    sortAsc[col] = !sortAsc[col];
-    var asc = sortAsc[col];
-    filteredData.sort(function(a, b) {
-      var va = a[col] || ''; var vb = b[col] || '';
+  function sortBy(tabKey, col) {
+    var s = state[tabKey];
+    s.sortAsc[col] = !s.sortAsc[col];
+    var asc = s.sortAsc[col];
+    s.filtered.sort(function(a, b) {
+      var va = a[col]; var vb = b[col];
+      if (va === null || va === undefined) va = '';
+      if (vb === null || vb === undefined) vb = '';
       return asc
         ? String(va).localeCompare(String(vb), undefined, { numeric: true })
         : String(vb).localeCompare(String(va), undefined, { numeric: true });
     });
-    currentPage = 1;
-    renderPage();
+    s.page = 1;
+    renderPage(tabKey);
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   window.onload = function() {
@@ -284,7 +446,7 @@
       hasConfig = !!(localStorage.getItem('sb_url') && localStorage.getItem('sb_key'));
     } catch(e) {}
     if (hasConfig) {
-      loadData();
+      loadAllData();
     }
   };
 </script>
