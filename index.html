@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Supabase Test</title>
+  <title>View Tabel AHI-MTU</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -11,13 +11,13 @@
     :root {
       --bg: #0a0e1a;
       --surface: #111827;
+      --surface2: #0f172a;
       --border: #1f2d45;
       --accent: #3ecf8e;
-      --accent2: #1a7f5a;
       --text: #e2e8f0;
       --muted: #64748b;
       --error: #f87171;
-      --warning: #fbbf24;
+      --success: #3ecf8e;
       --mono: 'JetBrains Mono', monospace;
       --sans: 'Syne', sans-serif;
     }
@@ -27,91 +27,89 @@
       color: var(--text);
       font-family: var(--sans);
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
+      padding: 32px 24px;
       background-image:
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(62,207,142,0.08) 0%, transparent 70%),
-        radial-gradient(ellipse 40% 30% at 80% 80%, rgba(62,207,142,0.04) 0%, transparent 60%);
+        radial-gradient(ellipse 80% 40% at 50% -10%, rgba(62,207,142,0.07) 0%, transparent 70%);
     }
 
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 36px;
-      width: 100%;
-      max-width: 560px;
-      box-shadow: 0 0 0 1px rgba(62,207,142,0.05), 0 24px 64px rgba(0,0,0,0.4);
-    }
+    .container { max-width: 1100px; margin: 0 auto; }
 
-    .logo-row {
+    .header {
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: space-between;
       margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
-    .logo-dot {
-      width: 10px; height: 10px;
+    .title-group {}
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(62,207,142,0.1);
+      border: 1px solid rgba(62,207,142,0.2);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .dot {
+      width: 6px; height: 6px;
       border-radius: 50%;
       background: var(--accent);
-      box-shadow: 0 0 12px var(--accent);
       animation: pulse 2s ease-in-out infinite;
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(0.85); }
-    }
-
-    .logo-text {
-      font-family: var(--mono);
-      font-size: 13px;
-      color: var(--accent);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      0%,100% { opacity:1; } 50% { opacity:0.4; }
     }
 
     h1 {
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 800;
-      color: var(--text);
-      margin-bottom: 6px;
       letter-spacing: -0.02em;
+      color: var(--text);
     }
 
-    .subtitle {
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 32px;
+    h1 span { color: var(--accent); }
+
+    .config-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
     }
 
-    .field {
-      margin-bottom: 16px;
-    }
-
-    label {
+    .field label {
       display: block;
       font-family: var(--mono);
-      font-size: 11px;
+      font-size: 10px;
       color: var(--muted);
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     input {
       width: 100%;
       background: var(--bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
+      border-radius: 7px;
+      padding: 10px 12px;
       color: var(--text);
       font-family: var(--mono);
-      font-size: 13px;
+      font-size: 12px;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
@@ -123,31 +121,18 @@
 
     input::placeholder { color: var(--muted); }
 
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 24px 0;
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      flex: 1;
-      min-width: 120px;
-      padding: 12px 20px;
-      border-radius: 8px;
+    .btn {
+      padding: 10px 20px;
+      border-radius: 7px;
       border: none;
       font-family: var(--mono);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
-      letter-spacing: 0.05em;
       text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
     }
 
     .btn-primary {
@@ -158,265 +143,377 @@
     .btn-primary:hover {
       background: #5ce0a5;
       transform: translateY(-1px);
-      box-shadow: 0 4px 20px rgba(62,207,142,0.3);
+      box-shadow: 0 4px 16px rgba(62,207,142,0.3);
     }
 
-    .btn-secondary {
-      background: transparent;
-      color: var(--text);
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      background: var(--surface);
       border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      min-width: 140px;
     }
 
-    .btn-secondary:hover {
-      border-color: var(--accent);
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 800;
       color: var(--accent);
     }
 
-    .btn-danger {
-      background: transparent;
-      color: var(--error);
-      border: 1px solid rgba(248,113,113,0.3);
+    .stat-value.muted { color: var(--text); font-size: 14px; }
+
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
     }
 
-    .btn-danger:hover {
-      background: rgba(248,113,113,0.1);
+    .table-toolbar {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
-    button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none !important;
+    .table-title {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
     }
 
-    .status-bar {
-      margin-top: 20px;
-      padding: 12px 14px;
+    .table-title span { color: var(--accent); }
+
+    .search-input {
+      width: 220px;
+      padding: 7px 12px;
+      font-size: 12px;
+    }
+
+    .overflow-x { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    thead tr {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.15s;
+    }
+
+    th:hover { color: var(--accent); }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(31,45,69,0.6);
+      transition: background 0.15s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(62,207,142,0.03); }
+
+    td {
+      padding: 11px 16px;
+      color: #94a3b8;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    td:first-child { color: var(--text); font-weight: 600; }
+
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 13px;
+      display: none;
+    }
+
+    .empty-state .icon { font-size: 32px; margin-bottom: 12px; }
+
+    .status-msg {
+      padding: 12px 16px;
       border-radius: 8px;
       font-family: var(--mono);
       font-size: 12px;
+      margin-bottom: 16px;
       display: none;
+    }
+
+    .status-msg.show { display: block; }
+    .status-msg.error { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: var(--error); }
+    .status-msg.loading { background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.15); color: #fbbf24; }
+    .status-msg.success { background: rgba(62,207,142,0.06); border: 1px solid rgba(62,207,142,0.15); color: var(--accent); }
+
+    .pagination {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
-    .status-bar.show { display: flex; }
-    .status-bar.loading { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); color: var(--warning); }
-    .status-bar.success { background: rgba(62,207,142,0.08); border: 1px solid rgba(62,207,142,0.2); color: var(--accent); }
-    .status-bar.error { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: var(--error); }
+    .page-btns { display: flex; gap: 6px; }
 
-    .spinner {
-      width: 14px; height: 14px;
-      border: 2px solid rgba(251,191,36,0.3);
-      border-top-color: var(--warning);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      flex-shrink: 0;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .result-box {
-      margin-top: 20px;
+    .page-btn {
+      padding: 5px 12px;
       background: var(--bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      display: none;
-    }
-
-    .result-box.show { display: block; }
-
-    .result-header {
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text);
       font-family: var(--mono);
       font-size: 11px;
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      cursor: pointer;
+      transition: all 0.15s;
     }
 
-    .result-count {
-      background: rgba(62,207,142,0.15);
-      color: var(--accent);
-      padding: 2px 8px;
-      border-radius: 20px;
-      font-size: 10px;
+    .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .page-btn.active { background: var(--accent); color: #0a0e1a; border-color: var(--accent); }
+
+    @media (max-width: 600px) {
+      .config-card { grid-template-columns: 1fr; }
+      h1 { font-size: 22px; }
     }
-
-    pre {
-      padding: 16px;
-      font-family: var(--mono);
-      font-size: 12px;
-      color: #94a3b8;
-      overflow-x: auto;
-      max-height: 280px;
-      overflow-y: auto;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-
-    pre::-webkit-scrollbar { width: 6px; height: 6px; }
-    pre::-webkit-scrollbar-track { background: transparent; }
-    pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-    .tip {
-      margin-top: 20px;
-      padding: 12px 14px;
-      background: rgba(62,207,142,0.04);
-      border: 1px solid rgba(62,207,142,0.1);
-      border-radius: 8px;
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    .tip span { color: var(--accent); }
   </style>
 </head>
 <body>
+<div class="container">
 
-<div class="card">
-  <div class="logo-row">
-    <div class="logo-dot"></div>
-    <span class="logo-text">Supabase · Connection Test</span>
-  </div>
-
-  <h1>Test Koneksi</h1>
-  <p class="subtitle">// masukkan kredensial supabase kamu</p>
-
-  <div class="field">
-    <label>Project URL</label>
-    <input type="text" id="url" placeholder="https://xxxxxxxx.supabase.co" />
-  </div>
-
-  <div class="field">
-    <label>Anon Key</label>
-    <input type="password" id="key" placeholder="eyJhbGci..." />
-  </div>
-
-  <div class="field">
-    <label>Nama Tabel</label>
-    <input type="text" id="tabel" placeholder="nama_tabel" />
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="btn-group">
-    <button class="btn-primary" onclick="ambilData()">▶ Ambil Data</button>
-    <button class="btn-secondary" onclick="testKoneksi()">⚡ Test Koneksi</button>
-    <button class="btn-danger" onclick="resetForm()">✕ Reset</button>
-  </div>
-
-  <div class="status-bar" id="status">
-    <div class="spinner" id="spinner"></div>
-    <span id="statusMsg">Menghubungkan...</span>
-  </div>
-
-  <div class="result-box" id="resultBox">
-    <div class="result-header">
-      <span>OUTPUT</span>
-      <span class="result-count" id="rowCount"></span>
+  <div class="header">
+    <div class="title-group">
+      <div class="badge"><div class="dot"></div> Supabase Viewer</div>
+      <h1>Tabel <span>AHI-MTU</span></h1>
     </div>
-    <pre id="hasil"></pre>
   </div>
 
-  <div class="tip">
-    💡 <span>Tip:</span> URL & Anon Key ada di Supabase Dashboard → Settings → API
+  <div class="config-card">
+    <div class="field">
+      <label>Project URL</label>
+      <input type="text" id="url" placeholder="https://xxxxxxxx.supabase.co" />
+    </div>
+    <div class="field">
+      <label>Anon Key</label>
+      <input type="password" id="key" placeholder="eyJhbGci..." />
+    </div>
+    <button class="btn btn-primary" onclick="loadData()">▶ Load Data</button>
   </div>
+
+  <div class="status-msg" id="statusMsg"></div>
+
+  <div class="stats-row" id="statsRow" style="display:none">
+    <div class="stat">
+      <div class="stat-label">Total Baris</div>
+      <div class="stat-value" id="statTotal">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Total Kolom</div>
+      <div class="stat-value" id="statKolom">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Tabel</div>
+      <div class="stat-value muted">AHI-MTU</div>
+    </div>
+  </div>
+
+  <div class="table-wrap" id="tableWrap" style="display:none">
+    <div class="table-toolbar">
+      <span class="table-title">📋 <span>AHI-MTU</span></span>
+      <input type="text" class="search-input" id="searchInput" placeholder="🔍 Cari data..." oninput="filterData()" />
+    </div>
+    <div class="overflow-x">
+      <table id="dataTable">
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState">
+        <div class="icon">🔍</div>
+        Data tidak ditemukan
+      </div>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   const { createClient } = supabase;
+  const TABLE = 'AHI-MTU';
+  const PAGE_SIZE = 20;
+
+  let allData = [];
+  let filteredData = [];
+  let currentPage = 1;
 
   function setStatus(type, msg) {
-    const bar = document.getElementById('status');
-    const msgEl = document.getElementById('statusMsg');
-    const spinner = document.getElementById('spinner');
-    bar.className = `status-bar show ${type}`;
-    msgEl.textContent = msg;
-    spinner.style.display = type === 'loading' ? 'block' : 'none';
+    const el = document.getElementById('statusMsg');
+    el.className = `status-msg show ${type}`;
+    el.textContent = msg;
   }
 
-  function showResult(data) {
-    const box = document.getElementById('resultBox');
-    const pre = document.getElementById('hasil');
-    const count = document.getElementById('rowCount');
-    box.classList.add('show');
-    pre.textContent = JSON.stringify(data, null, 2);
-    if (Array.isArray(data)) {
-      count.textContent = `${data.length} baris`;
-    } else {
-      count.textContent = 'response';
-    }
-  }
+  async function loadData() {
+    const url = document.getElementById('url').value.trim();
+    const key = document.getElementById('key').value.trim();
 
-  function getInputs() {
-    return {
-      url: document.getElementById('url').value.trim(),
-      key: document.getElementById('key').value.trim(),
-      tabel: document.getElementById('tabel').value.trim()
-    };
-  }
+    if (!url || !key) { setStatus('error', '⚠️ Project URL dan Anon Key wajib diisi!'); return; }
 
-  async function testKoneksi() {
-    const { url, key } = getInputs();
-    if (!url || !key) {
-      setStatus('error', 'URL dan Anon Key wajib diisi!');
-      return;
-    }
-    setStatus('loading', 'Menguji koneksi...');
-    try {
-      const db = createClient(url, key);
-      const { error } = await db.from('_test_').select('*').limit(1);
-      if (error && error.code === '42P01') {
-        setStatus('success', '✓ Koneksi berhasil! (tabel _test_ tidak ada, tapi server merespons)');
-      } else if (!error) {
-        setStatus('success', '✓ Koneksi berhasil!');
-      } else {
-        setStatus('error', '✗ Error: ' + error.message);
-      }
-    } catch (e) {
-      setStatus('error', '✗ Gagal terhubung: ' + e.message);
-    }
-  }
-
-  async function ambilData() {
-    const { url, key, tabel } = getInputs();
-    if (!url || !key) { setStatus('error', 'URL dan Anon Key wajib diisi!'); return; }
-    if (!tabel) { setStatus('error', 'Nama tabel wajib diisi!'); return; }
-
-    setStatus('loading', `Mengambil data dari tabel "${tabel}"...`);
-    document.getElementById('resultBox').classList.remove('show');
+    setStatus('loading', '⏳ Mengambil data dari tabel ' + TABLE + '...');
+    document.getElementById('tableWrap').style.display = 'none';
+    document.getElementById('statsRow').style.display = 'none';
 
     try {
       const db = createClient(url, key);
-      const { data, error } = await db.from(tabel).select('*');
+      const { data, error } = await db.from(TABLE).select('*');
+
       if (error) {
         setStatus('error', '✗ Error: ' + error.message);
-        showResult({ error: error.message });
-      } else {
-        setStatus('success', `✓ Berhasil! ${data.length} baris ditemukan`);
-        showResult(data);
+        return;
       }
-    } catch (e) {
-      setStatus('error', '✗ Exception: ' + e.message);
+
+      allData = data;
+      filteredData = data;
+      currentPage = 1;
+
+      setStatus('success', `✓ Berhasil! ${data.length} baris dimuat dari tabel ${TABLE}`);
+
+      document.getElementById('statTotal').textContent = data.length;
+      document.getElementById('statKolom').textContent = data.length > 0 ? Object.keys(data[0]).length : 0;
+      document.getElementById('statsRow').style.display = 'flex';
+      document.getElementById('tableWrap').style.display = 'block';
+
+      renderTable();
+    } catch(e) {
+      setStatus('error', '✗ Gagal: ' + e.message);
     }
   }
 
-  function resetForm() {
-    document.getElementById('url').value = '';
-    document.getElementById('key').value = '';
-    document.getElementById('tabel').value = '';
-    document.getElementById('status').className = 'status-bar';
-    document.getElementById('resultBox').classList.remove('show');
-    document.getElementById('hasil').textContent = '';
+  function renderTable() {
+    if (allData.length === 0) return;
+
+    const headers = Object.keys(allData[0]);
+
+    // Head
+    document.getElementById('tableHead').innerHTML =
+      '<tr>' + headers.map(h => `<th onclick="sortBy('${h}')">${h} ↕</th>`).join('') + '</tr>';
+
+    renderPage();
+  }
+
+  function renderPage() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    const pageData = filteredData.slice(start, end);
+    const headers = Object.keys(allData[0]);
+    const body = document.getElementById('tableBody');
+    const empty = document.getElementById('emptyState');
+
+    if (filteredData.length === 0) {
+      body.innerHTML = '';
+      empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+      body.innerHTML = pageData.map(row =>
+        '<tr>' + headers.map(h => `<td title="${row[h] ?? ''}">${row[h] ?? '<span style="color:#334155">null</span>'}</td>`).join('') + '</tr>'
+      ).join('');
+    }
+
+    renderPagination();
+  }
+
+  function renderPagination() {
+    const total = filteredData.length;
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+    const start = (currentPage - 1) * PAGE_SIZE + 1;
+    const end = Math.min(currentPage * PAGE_SIZE, total);
+    const el = document.getElementById('pagination');
+
+    if (total === 0) { el.innerHTML = ''; return; }
+
+    let btns = '';
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+        btns += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+      } else if (Math.abs(i - currentPage) === 2) {
+        btns += `<span style="color:var(--muted);padding:0 4px">...</span>`;
+      }
+    }
+
+    el.innerHTML = `<span>Menampilkan ${start}–${end} dari ${total} baris</span><div class="page-btns">${btns}</div>`;
+  }
+
+  function goPage(p) {
+    currentPage = p;
+    renderPage();
+  }
+
+  function filterData() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    filteredData = allData.filter(row =>
+      Object.values(row).some(v => String(v ?? '').toLowerCase().includes(q))
+    );
+    currentPage = 1;
+    renderPage();
+  }
+
+  let sortAsc = {};
+  function sortBy(col) {
+    sortAsc[col] = !sortAsc[col];
+    filteredData.sort((a, b) => {
+      const va = a[col] ?? '';
+      const vb = b[col] ?? '';
+      return sortAsc[col]
+        ? String(va).localeCompare(String(vb), undefined, { numeric: true })
+        : String(vb).localeCompare(String(va), undefined, { numeric: true });
+    });
+    currentPage = 1;
+    renderPage();
   }
 </script>
-
 </body>
 </html>
