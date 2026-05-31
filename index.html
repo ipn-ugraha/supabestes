@@ -294,42 +294,91 @@
   function loadTable(tabKey) {
     var s = state[tabKey];
     var prefix = tabKey === 'ahi' ? 'ahi' : 'ref';
+    var containerId = 'container' + prefix.charAt(0).toUpperCase() + prefix.slice(1);
 
     document.getElementById(prefix + 'Status').textContent = 'Loading...';
-    document.getElementById(prefix + 'Status').className = 'stat-value';
+    document.getElementById(prefix + 'Status').style.color = '';
     document.getElementById(prefix + 'Status').style.fontSize = '14px';
-    document.getElementById('container' + prefix.charAt(0).toUpperCase() + prefix.slice(1)).innerHTML =
+    document.getElementById(containerId).innerHTML =
       '<div class="loading-state"><span class="spinner"></span> Memuat ' + s.table + '...</div>';
 
-    return db.from(s.table).select('*').then(function(result) {
-      if (result.error) {
+    // STEP 1: Get exact count first
+    return db.from(s.table).select('*', { count: 'exact', head: true }).then(function(countResult) {
+      if (countResult.error) {
         document.getElementById(prefix + 'Status').textContent = '✗ Error';
-        document.getElementById(prefix + 'Status').classList.add('red');
         document.getElementById(prefix + 'Status').style.color = 'var(--red)';
-        document.getElementById('container' + prefix.charAt(0).toUpperCase() + prefix.slice(1)).innerHTML =
-          '<div class="loading-state" style="color:var(--red)">✗ ' + result.error.message + '</div>';
+        document.getElementById(containerId).innerHTML =
+          '<div class="loading-state" style="color:var(--red)">✗ ' + countResult.error.message + '</div>';
         return false;
       }
 
-      s.allData = result.data || [];
-      s.filtered = s.allData.slice();
-      s.page = 1;
+      var totalCount = countResult.count || 0;
 
-      document.getElementById(prefix + 'Total').textContent = s.allData.length.toLocaleString();
-      document.getElementById(prefix + 'Kolom').textContent = s.allData.length > 0 ? Object.keys(s.allData[0]).length : 0;
-      document.getElementById(prefix + 'Status').textContent = '✓ OK';
-      document.getElementById(prefix + 'Status').style.color = 'var(--grn)';
-      document.getElementById('count' + prefix.charAt(0).toUpperCase() + prefix.slice(1)).textContent = s.allData.length;
+      if (totalCount === 0) {
+        s.allData = [];
+        s.filtered = [];
+        document.getElementById(prefix + 'Total').textContent = '0';
+        document.getElementById(prefix + 'Kolom').textContent = '0';
+        document.getElementById(prefix + 'Status').textContent = '✓ Kosong';
+        document.getElementById(prefix + 'Status').style.color = 'var(--amb)';
+        document.getElementById('count' + prefix.charAt(0).toUpperCase() + prefix.slice(1)).textContent = '0';
+        document.getElementById(containerId).innerHTML = '<div class="loading-state">Tabel kosong</div>';
+        return true;
+      }
 
-      renderTable(tabKey);
-      return true;
+      // STEP 2: Fetch all in chunks of 1000
+      return fetchAllRows(s.table, totalCount, prefix, containerId).then(function(allRows) {
+        s.allData = allRows;
+        s.filtered = allRows.slice();
+        s.page = 1;
+
+        var loaded = allRows.length;
+        var statusTxt = loaded === totalCount ? '✓ Lengkap' : '⚠ ' + loaded + '/' + totalCount;
+        var statusColor = loaded === totalCount ? 'var(--grn)' : 'var(--amb)';
+
+        document.getElementById(prefix + 'Total').textContent = totalCount.toLocaleString();
+        document.getElementById(prefix + 'Kolom').textContent = allRows.length > 0 ? Object.keys(allRows[0]).length : 0;
+        document.getElementById(prefix + 'Status').textContent = statusTxt;
+        document.getElementById(prefix + 'Status').style.color = statusColor;
+        document.getElementById('count' + prefix.charAt(0).toUpperCase() + prefix.slice(1)).textContent = loaded.toLocaleString();
+
+        renderTable(tabKey);
+        return true;
+      });
     }, function(err) {
       document.getElementById(prefix + 'Status').textContent = '✗ Failed';
       document.getElementById(prefix + 'Status').style.color = 'var(--red)';
-      document.getElementById('container' + prefix.charAt(0).toUpperCase() + prefix.slice(1)).innerHTML =
+      document.getElementById(containerId).innerHTML =
         '<div class="loading-state" style="color:var(--red)">✗ ' + err.message + '</div>';
       return false;
     });
+  }
+
+  function fetchAllRows(table, totalCount, prefix, containerId) {
+    var CHUNK = 1000;
+    var totalChunks = Math.ceil(totalCount / CHUNK);
+    var allRows = [];
+
+    function fetchChunk(idx) {
+      var from = idx * CHUNK;
+      var to = Math.min((idx + 1) * CHUNK - 1, totalCount - 1);
+
+      document.getElementById(containerId).innerHTML =
+        '<div class="loading-state"><span class="spinner"></span> Memuat ' + table + '... ' +
+        (idx + 1) + '/' + totalChunks + ' chunk (' + Math.min((idx + 1) * CHUNK, totalCount).toLocaleString() +
+        '/' + totalCount.toLocaleString() + ' baris)</div>';
+
+      return db.from(table).select('*').range(from, to).then(function(res) {
+        if (res.error) throw res.error;
+        allRows = allRows.concat(res.data || []);
+        if (idx + 1 < totalChunks) {
+          return fetchChunk(idx + 1);
+        }
+        return allRows;
+      });
+    }
+
+    return fetchChunk(0);
   }
 
   function renderTable(tabKey) {
