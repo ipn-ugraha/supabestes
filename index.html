@@ -770,7 +770,7 @@ document.addEventListener('click',e=>{
 
 async function init(){
   // Priority: config.js → localStorage → modal setup
-  let sbUrl, sbKey;
+  let sbUrl, sbKey, usingConfigJs = false;
   
   // 1. Coba dari config.js (jika ada window.SUPABASE_URL)
   if(typeof SUPABASE_URL !== 'undefined' && typeof SUPABASE_ANON_KEY !== 'undefined' 
@@ -778,6 +778,9 @@ async function init(){
      && !SUPABASE_URL.includes('xxxxxxxx')){
     sbUrl = SUPABASE_URL;
     sbKey = SUPABASE_ANON_KEY;
+    usingConfigJs = true;
+    // Sembunyikan tombol ⚙ DB karena tidak perlu lagi
+    document.getElementById('sbSettingBtn').style.display = 'none';
   } else {
     // 2. Fallback ke localStorage
     sbUrl = localStorage.getItem('sb_url');
