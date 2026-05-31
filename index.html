@@ -126,6 +126,45 @@ tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
 tbody tr:hover{background:rgba(255,255,255,0.02)}
 tbody td{padding:7px 10px;color:var(--text2);white-space:nowrap}
 
+/* EDIT BUTTON & MODAL */
+.edit-btn{background:transparent;border:1px solid var(--border2);color:var(--text3);width:22px;height:22px;border-radius:5px;cursor:pointer;font-size:11px;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;padding:0}
+.edit-btn:hover{color:var(--accent);border-color:var(--accent);background:rgba(59,130,246,.1)}
+.row-mtu:hover .edit-btn{color:var(--text2)}
+.edit-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9998;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.edit-overlay.open{display:flex}
+.edit-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:560px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+.edit-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.edit-head-title{font-size:15px;font-weight:600;color:var(--text)}
+.edit-head-sub{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px}
+.edit-close{background:transparent;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:5px}
+.edit-close:hover{background:var(--bg3);color:var(--text)}
+.edit-body{padding:18px 22px;overflow-y:auto;flex:1}
+.edit-section{margin-bottom:16px}
+.edit-section-title{font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.edit-field{margin-bottom:10px}
+.edit-field.full{grid-column:1 / -1}
+.edit-label{display:block;font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.edit-input,.edit-select,.edit-textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:8px 10px;border-radius:6px;font-family:var(--font);font-size:12px;outline:none;transition:border-color .15s}
+.edit-input:focus,.edit-select:focus,.edit-textarea:focus{border-color:var(--accent)}
+.edit-input[readonly]{background:var(--bg);color:var(--text3);cursor:not-allowed}
+.edit-textarea{resize:vertical;min-height:60px;font-family:var(--font)}
+.edit-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.edit-status{font-family:var(--mono);font-size:11px;color:var(--text3)}
+.edit-status.ok{color:var(--grn)}
+.edit-status.err{color:var(--red)}
+.edit-btns{display:flex;gap:8px}
+.btn-cancel{padding:8px 14px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:6px;font-family:var(--font);font-size:12px;cursor:pointer}
+.btn-cancel:hover{background:var(--bg3)}
+.btn-save{padding:8px 18px;background:var(--accent);border:none;color:#fff;border-radius:6px;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer}
+.btn-save:hover{background:var(--accent2)}
+.btn-save:disabled{opacity:.5;cursor:not-allowed}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:12px 18px;font-size:12px;font-family:var(--mono);z-index:10000;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:none;align-items:center;gap:10px}
+.toast.show{display:flex;animation:tslide .3s ease}
+.toast.ok{border-color:var(--grn);color:var(--grn)}
+.toast.err{border-color:var(--red);color:var(--red)}
+@keyframes tslide{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
 /* GI / BAY / MTU rows */
 .row-gi td:nth-child(2){color:var(--text);font-weight:600}
 .row-bay td:nth-child(2){padding-left:28px;color:var(--text);font-weight:500}
@@ -186,6 +225,69 @@ tbody td{padding:7px 10px;color:var(--text2);white-space:nowrap}
 </style>
 </head>
 <body>
+
+<!-- EDIT MTU MODAL -->
+<div class="edit-overlay" id="editOverlay">
+  <div class="edit-modal">
+    <div class="edit-head">
+      <div>
+        <div class="edit-head-title">Edit Data MTU</div>
+        <div class="edit-head-sub" id="editSubtitle">—</div>
+      </div>
+      <button class="edit-close" id="editCloseBtn">✕</button>
+    </div>
+    <div class="edit-body">
+
+      <div class="edit-section">
+        <div class="edit-section-title">📋 Identitas (read-only)</div>
+        <div class="edit-grid">
+          <div class="edit-field"><label class="edit-label">GI</label><input type="text" class="edit-input" id="eGi" readonly></div>
+          <div class="edit-field"><label class="edit-label">Bay</label><input type="text" class="edit-input" id="eBay" readonly></div>
+          <div class="edit-field"><label class="edit-label">Tipe (#)</label><input type="text" class="edit-input" id="eTipe" readonly></div>
+          <div class="edit-field"><label class="edit-label">Serial Id</label><input type="text" class="edit-input" id="eSerial" readonly></div>
+          <div class="edit-field"><label class="edit-label">Merek</label><input type="text" class="edit-input" id="eMerek" readonly></div>
+          <div class="edit-field"><label class="edit-label">Tipe Detail</label><input type="text" class="edit-input" id="eTipeD" readonly></div>
+        </div>
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">⚡ Data Operasional</div>
+        <div class="edit-grid">
+          <div class="edit-field">
+            <label class="edit-label">Status Hi</label>
+            <select class="edit-select" id="eStatusHi">
+              <option value="">—</option>
+              <option value="CRITICAL">CRITICAL</option>
+              <option value="POOR">POOR</option>
+              <option value="FAIR">FAIR</option>
+              <option value="GOOD">GOOD</option>
+              <option value="VERY GOOD">VERY GOOD</option>
+            </select>
+          </div>
+          <div class="edit-field"><label class="edit-label">Nilai Hi</label><input type="number" class="edit-input" id="eNilaiHi" step="0.01"></div>
+          <div class="edit-field full">
+            <label class="edit-label">Justifikasi Prioritas</label>
+            <textarea class="edit-textarea" id="eJust" rows="2"></textarea>
+          </div>
+          <div class="edit-field full">
+            <label class="edit-label">Rencana</label>
+            <textarea class="edit-textarea" id="eRencana" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="edit-foot">
+      <span class="edit-status" id="editStatus"></span>
+      <div class="edit-btns">
+        <button class="btn-cancel" id="editCancelBtn">Batal</button>
+        <button class="btn-save" id="editSaveBtn">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <!-- SUPABASE CONFIG MODAL -->
 <div id="sbConfigModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)">
@@ -456,6 +558,7 @@ const USIA_BUCKETS=[
 let raw=[], giKrit=new Set(), giTierMap=new Map(), giKttMap=new Map(), filtered=[], giGroups=[];
 let page=1, scol='maxhi', sdir='desc', tab='all';
 let expGi=new Set(), expBay=new Set(), charts={};
+let sbDb=null, editingIdx=-1;
 
 // ── KATEGORISASI BAY ─────────────────────────────────────────────────────────
 function katBay(b){
@@ -544,6 +647,7 @@ async function init(){
   let db;
   try{
     db = supabase.createClient(sbUrl, sbKey);
+    sbDb = db;
   }catch(e){
     setP(0,'URL Supabase tidak valid');
     throw new Error('URL Supabase tidak valid: '+e.message);
@@ -1128,8 +1232,11 @@ function mtuH(r){
   const bc=hi>=150?'#ef4444':hi>=100?'#f59e0b':hi>=50?'#eab308':'#22c55e';
   const ren=(r.Rencana||'').trim();
   const renClean=(ren==='nan'||ren==='#N/A')?'':ren;
+  const rowIdx = raw.indexOf(r);
   return `<tr class="row-mtu">
-    <td></td>
+    <td style="text-align:center;padding:6px 6px">
+      <button class="edit-btn" onclick="openEditMtu(${rowIdx})" title="Edit data MTU">✎</button>
+    </td>
     <td style="padding-left:52px"><span class="badge" style="background:rgba(99,102,241,.1);color:#a5b4fc;border:1px solid rgba(99,102,241,.2);font-size:9px">${e(r['#']||'—')}</span></td>
     <td style="color:var(--text2)">${e(r.Merek||'—')} <span style="color:var(--text3);font-size:10px">${e(r.Tipe||'')}</span></td>
     <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">${r.Phasa||'—'}</td>
@@ -1225,6 +1332,112 @@ document.getElementById('sbSaveBtn').addEventListener('click',()=>{
   localStorage.setItem('sb_key',key);
   closeSbConfig();
   location.reload();
+});
+
+// ── EDIT MTU HANDLERS ────────────────────────────────────────────────────────
+function openEditMtu(idx){
+  if(idx<0||idx>=raw.length) return;
+  const r = raw[idx];
+  editingIdx = idx;
+
+  document.getElementById('editSubtitle').textContent =
+    (r.Gi||'—') + ' › ' + (r.Bay||'—') + ' › ' + (r['#']||'—');
+
+  // Read-only fields
+  document.getElementById('eGi').value = r.Gi||'';
+  document.getElementById('eBay').value = r.Bay||'';
+  document.getElementById('eTipe').value = r['#']||'';
+  document.getElementById('eSerial').value = r['Serial Id']||'';
+  document.getElementById('eMerek').value = r.Merek||'';
+  document.getElementById('eTipeD').value = r.Tipe||'';
+
+  // Editable fields
+  document.getElementById('eStatusHi').value = (r['Status Hi']||'').toUpperCase().trim();
+  document.getElementById('eNilaiHi').value = r['Nilai Hi']||'';
+  document.getElementById('eJust').value = r['Justifikasi Prioritas']||'';
+  document.getElementById('eRencana').value = r.Rencana||'';
+
+  document.getElementById('editStatus').textContent = '';
+  document.getElementById('editStatus').className = 'edit-status';
+  document.getElementById('editSaveBtn').disabled = false;
+  document.getElementById('editOverlay').classList.add('open');
+}
+
+function closeEditMtu(){
+  document.getElementById('editOverlay').classList.remove('open');
+  editingIdx = -1;
+}
+
+function showToast(msg, type){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show '+(type||'ok');
+  setTimeout(()=>{t.classList.remove('show');},3000);
+}
+
+async function saveEditMtu(){
+  if(editingIdx<0) return;
+  const r = raw[editingIdx];
+  if(!sbDb){ alert('Database belum terhubung'); return; }
+
+  // Need an identifier - try id first, fall back to Serial Id
+  const hasId = r.id !== undefined && r.id !== null;
+  if(!hasId && !r['Serial Id']){
+    alert('Baris ini tidak punya id atau Serial Id - tidak bisa diupdate');
+    return;
+  }
+
+  const updates = {
+    'Status Hi': document.getElementById('eStatusHi').value,
+    'Nilai Hi': document.getElementById('eNilaiHi').value || null,
+    'Justifikasi Prioritas': document.getElementById('eJust').value,
+    'Rencana': document.getElementById('eRencana').value
+  };
+
+  const statusEl = document.getElementById('editStatus');
+  const saveBtn = document.getElementById('editSaveBtn');
+  statusEl.textContent = '⏳ Menyimpan...';
+  statusEl.className = 'edit-status';
+  saveBtn.disabled = true;
+
+  try{
+    const query = sbDb.from(SB_TABLE_AHI).update(updates);
+    const filtered = hasId ? query.eq('id', r.id) : query.eq('Serial Id', r['Serial Id']);
+    const result = await filtered.select();
+
+    if(result.error) throw result.error;
+    if(!result.data || result.data.length===0){
+      throw new Error('Tidak ada baris yang terupdate (cek RLS policy untuk UPDATE)');
+    }
+
+    // Update local data
+    Object.assign(r, updates);
+    // Recompute derived values
+    r._so = (r['Status Hi']||'').toUpperCase().trim();
+    r._se = r._so;
+    r._adj = false;
+
+    statusEl.textContent = '✓ Berhasil disimpan';
+    statusEl.className = 'edit-status ok';
+    showToast('✓ Data berhasil diperbarui di database','ok');
+
+    // Re-render
+    applyFilters();
+
+    setTimeout(closeEditMtu, 800);
+  }catch(err){
+    statusEl.textContent = '✗ '+err.message;
+    statusEl.className = 'edit-status err';
+    saveBtn.disabled = false;
+    showToast('✗ Gagal: '+err.message,'err');
+  }
+}
+
+document.getElementById('editCloseBtn').addEventListener('click',closeEditMtu);
+document.getElementById('editCancelBtn').addEventListener('click',closeEditMtu);
+document.getElementById('editSaveBtn').addEventListener('click',saveEditMtu);
+document.getElementById('editOverlay').addEventListener('click',(e)=>{
+  if(e.target.id==='editOverlay') closeEditMtu();
 });
 
 init().catch(err=>{
